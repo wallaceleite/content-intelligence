@@ -15,20 +15,35 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 1. Upsert profile
+    // 1. Extract profile data from multiple possible Apify field locations
+    const firstPost = posts[0] || {};
+    const profileUsername = profile.username || firstPost.ownerUsername || "";
+    const profileFullName = profile.fullName || firstPost.ownerFullName || "";
+
+    // Apify stores profile data in various field names depending on the actor
+    const followersCount =
+      parseInt(profile.followersCount || profile.followers || firstPost.ownerFollowerCount || firstPost.followersCount || 0);
+    const followingCount =
+      parseInt(profile.followingCount || profile.following || firstPost.ownerFollowingCount || 0);
+    const postsCount =
+      parseInt(profile.postsCount || profile.posts || firstPost.ownerPostCount || 0);
+    const bio = profile.bio || firstPost.ownerBio || firstPost.biography || "";
+    const bioLink = profile.bioLink || firstPost.ownerExternalUrl || firstPost.externalUrl || "";
+    const profilePicUrl = profile.profilePicUrl || firstPost.ownerProfilePicUrl || firstPost.profilePicUrl || "";
+
     const { data: profileData, error: profileError } = await supabaseAdmin
       .from("profiles")
       .upsert(
         {
-          username: profile.username,
-          full_name: profile.fullName,
-          bio: profile.bio,
-          bio_link: profile.bioLink,
-          followers_count: profile.followersCount,
-          following_count: profile.followingCount,
-          posts_count: profile.postsCount,
-          profile_pic_url: profile.profilePicUrl,
-          instagram_url: `https://www.instagram.com/${profile.username}/`,
+          username: profileUsername,
+          full_name: profileFullName,
+          bio,
+          bio_link: bioLink,
+          followers_count: followersCount || null,
+          following_count: followingCount || null,
+          posts_count: postsCount || null,
+          profile_pic_url: profilePicUrl,
+          instagram_url: `https://www.instagram.com/${profileUsername}/`,
         },
         { onConflict: "username" }
       )

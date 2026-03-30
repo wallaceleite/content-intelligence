@@ -57,8 +57,19 @@ export function buildAnalysisPrompt(
     .map((p) => `${p.postId} (${p.views.toLocaleString("pt-BR")} views, ${p.engagementRate}% eng, ${p.duration || "?"}s)`)
     .join("\n  - ");
 
+  // Token optimization: full transcript for top 5, truncated for rest
+  const top5Ids = new Set(sorted.slice(0, 5).map((p) => p.postId));
+
+  const truncate = (text: string, max: number) =>
+    text && text.length > max ? text.slice(0, max) + "..." : text || "—";
+
   const reelsData = posts
     .map((p, i) => {
+      const isTop5 = top5Ids.has(p.postId);
+      // Top 5: full transcript (max 2000 chars). Rest: 500 chars.
+      const transcript = truncate(p.transcript, isTop5 ? 2000 : 500);
+      const caption = truncate(p.caption, isTop5 ? 500 : 200);
+
       let section = `
 ═══ REEL ${i + 1} | ${p.postId} | Eng: ${p.engagementRate}% | Outlier: ${p.outlierScore}x ═══
 Views: ${p.views.toLocaleString("pt-BR")} | Likes: ${p.likes.toLocaleString("pt-BR")} | Comments: ${p.comments.toLocaleString("pt-BR")}
@@ -67,25 +78,21 @@ Funil: ${p.funnelStage || "?"} | Hook: ${p.hookType || "?"} | CTA: ${p.ctaType |
 Tema: ${p.contentTheme || "?"} | Data: ${p.postedAt || "?"}
 Hook: "${p.hookText || "?"}"
 CTA: "${p.ctaText || "?"}"
-Hashtags: ${p.hashtags?.join(", ") || "—"}
+Hashtags: ${(p.hashtags || []).slice(0, 5).join(", ") || "—"}
 
-LEGENDA:
-${p.caption || "—"}
+LEGENDA: ${caption}
 
-TRANSCRIÇÃO:
-${p.transcript || "—"}`;
+TRANSCRIÇÃO${isTop5 ? "" : " (resumo)"}: ${transcript}`;
 
       if (p.commentsSummary) {
         section += `
-
 COMENTÁRIOS (${p.comments}): compra=${p.commentsSummary.purchaseIntent} | objeções=${p.commentsSummary.objections} | voz=${p.commentsSummary.audienceVoice} | elogios=${p.commentsSummary.praise} | perguntas=${p.commentsSummary.questions}
-Destaques:
-${p.commentsSummary.topComments.slice(0, 5).map((c) => `  "${c}"`).join("\n")}`;
+${p.commentsSummary.topComments.slice(0, isTop5 ? 5 : 3).map((c) => `  "${c}"`).join("\n")}`;
       }
 
       return section;
     })
-    .join("\n\n");
+    .join("\n");
 
   return `## PERFIL: @${profile.username} (${profile.fullName})
 ${profile.bio ? `Bio: ${profile.bio}` : ""}

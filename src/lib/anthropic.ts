@@ -22,7 +22,7 @@ export async function analyzeWithSonnet(
   userPrompt: string
 ): Promise<{ text: string; inputTokens: number; outputTokens: number }> {
   const response = await anthropic.messages.create({
-    model: "claude-sonnet-4-6-20250610",
+    model: "claude-sonnet-4-20250514",
     max_tokens: 16000,
     system: systemPrompt,
     messages: [{ role: "user", content: userPrompt }],

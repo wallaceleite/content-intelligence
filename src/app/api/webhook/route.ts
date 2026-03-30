@@ -71,30 +71,40 @@ export async function POST(req: NextRequest) {
 
     if (batchError) throw batchError;
 
+    // Safe number parser — handles strings, nulls, undefined, NaN
+    const safeInt = (v: any): number => {
+      const n = Number(v);
+      return Number.isFinite(n) ? Math.floor(n) : 0;
+    };
+    const safeFloat = (v: any): number => {
+      const n = Number(v);
+      return Number.isFinite(n) ? n : 0;
+    };
+
     // 3. Calculate average engagement for outlier scoring
     const avgEngagement =
       posts.reduce((sum: number, p: any) => {
-        const views = parseInt(p.videoViewCount || p.videoPlayCount || 0);
-        const likes = parseInt(p.likesCount || 0);
-        const comments = parseInt(p.commentsCount || 0);
+        const views = safeInt(p.videoViewCount || p.videoPlayCount);
+        const likes = safeInt(p.likesCount);
+        const comments = safeInt(p.commentsCount);
         return sum + (views > 0 ? ((likes + comments) / views) * 100 : 0);
       }, 0) / Math.max(posts.length, 1);
 
     // 4. Insert posts with derived metrics
     const postRows = posts.map((p: any) => {
-      const views = parseInt(p.videoViewCount || p.videoPlayCount || 0);
-      const likes = parseInt(p.likesCount || 0);
-      const comments = parseInt(p.commentsCount || 0);
+      const views = safeInt(p.videoViewCount || p.videoPlayCount);
+      const likes = safeInt(p.likesCount);
+      const comments = safeInt(p.commentsCount);
 
       const derived = calculateDerivedMetrics(
         {
           views,
           likes,
           comments,
-          shares: parseInt(p.sharesCount || 0),
-          saves: parseInt(p.savesCount || 0),
-          plays: parseInt(p.videoPlayCount || 0),
-          duration: parseFloat(p.videoDuration || 0),
+          shares: safeInt(p.sharesCount),
+          saves: safeInt(p.savesCount),
+          plays: safeInt(p.videoPlayCount),
+          duration: safeFloat(p.videoDuration),
           postedAt: p.timestamp,
         },
         avgEngagement
@@ -114,10 +124,10 @@ export async function POST(req: NextRequest) {
         views_count: views,
         likes_count: likes,
         comments_count: comments,
-        shares_count: parseInt(p.sharesCount || 0),
-        saves_count: parseInt(p.savesCount || 0),
-        play_count: parseInt(p.videoPlayCount || 0),
-        video_duration: parseFloat(p.videoDuration || 0),
+        shares_count: safeInt(p.sharesCount),
+        saves_count: safeInt(p.savesCount),
+        play_count: safeInt(p.videoPlayCount),
+        video_duration: safeFloat(p.videoDuration),
         engagement_rate: derived.engagementRate,
         comment_to_like_ratio: derived.commentToLikeRatio,
         engagement_velocity: derived.engagementVelocity,

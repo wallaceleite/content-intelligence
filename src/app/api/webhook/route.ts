@@ -6,7 +6,7 @@ import { calculateDerivedMetrics } from "@/lib/metrics";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { batchId, posts, profile, minViews, minEngagement, topN } = body;
+    const { batchId, posts, profile, minViews, minEngagement, topN, observacaoEstrategica } = body;
 
     if (!batchId || !posts || !profile) {
       return NextResponse.json(
@@ -64,6 +64,7 @@ export async function POST(req: NextRequest) {
         min_views: minViews || 0,
         min_engagement: minEngagement || 0,
         top_n: topN,
+        strategic_note: observacaoEstrategica || null,
       })
       .select()
       .single();

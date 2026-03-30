@@ -237,6 +237,7 @@ export async function POST(req: NextRequest) {
         avgComments,
         avgEngagementRate: avgEng,
         funnelDistribution: funnelDist,
+        strategicNote: batch.strategic_note || undefined,
       },
       postDataForPrompt
     );

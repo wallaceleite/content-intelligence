@@ -39,6 +39,7 @@ interface ProfileContext {
   avgViews: number;
   avgLikes: number;
   avgComments: number;
+  strategicNote?: string;
   avgEngagementRate: number;
   funnelDistribution: { tofu: number; mofu: number; bofu: number };
 }
@@ -94,6 +95,10 @@ ${p.commentsSummary.topComments.slice(0, isTop5 ? 5 : 3).map((c) => `  "${c}"`).
     })
     .join("\n");
 
+  const strategicContext = profile.strategicNote
+    ? `\n## CONTEXTO ESTRATÉGICO (por que este perfil está sendo analisado)\n${profile.strategicNote}\n`
+    : "";
+
   return `## PERFIL: @${profile.username} (${profile.fullName})
 ${profile.bio ? `Bio: ${profile.bio}` : ""}
 ${profile.bioLink ? `Link: ${profile.bioLink}` : ""}
@@ -102,7 +107,7 @@ Reels analisados: ${profile.totalPosts}
 Média: ${profile.avgViews.toLocaleString("pt-BR")} views | ${profile.avgLikes.toLocaleString("pt-BR")} likes | ${profile.avgComments.toLocaleString("pt-BR")} comments
 Engajamento médio: ${profile.avgEngagementRate}%
 Funil: TOFU ${profile.funnelDistribution.tofu} | MOFU ${profile.funnelDistribution.mofu} | BOFU ${profile.funnelDistribution.bofu}
-
+${strategicContext}
 Top 5 (engajamento):
   - ${top5}
 
@@ -217,12 +222,35 @@ O prompt deve incluir:
 - Instruções para adaptar qualquer tema ao estilo deste criador
 - O prompt deve funcionar sozinho, sem precisar de contexto adicional
 
+### PARTE 4 — INTELIGÊNCIA APLICADA PARA @owallaceleite
+${profile.strategicNote ? `\nCONTEXTO: ${profile.strategicNote}\n` : ""}
+Considerando que @owallaceleite é um perfil em construção focado em posicionamento, autoridade e crescimento de audiência qualificada para venda:
+
+**4.1 O QUE ADAPTAR DESTE PERFIL**
+- Quais estratégias deste perfil são aplicáveis para @owallaceleite AGORA (perfil pequeno)?
+- O que funciona DIFERENTE quando se está começando vs quando já se é grande?
+- Adaptações necessárias para o nicho/posicionamento de @owallaceleite
+
+**4.2 PLANO DE CONTEÚDO SEMANAL (7 dias)**
+7 conteúdos específicos para @owallaceleite criar ESTA SEMANA, baseados na inteligência extraída:
+| Dia | Tipo | Tema | Hook adaptado | Funil | Objetivo |
+
+**4.3 GAPS E OPORTUNIDADES**
+- O que este concorrente NÃO faz que @owallaceleite pode fazer
+- Nichos de conteúdo subexplorados
+- Formatos que o concorrente ignora
+
+**4.4 ESTRATÉGIA DE DIFERENCIAÇÃO**
+- Como usar a mesma estrutura mas com voz e posicionamento únicos
+- Ângulos que só @owallaceleite pode explorar
+- Caminho para se diferenciar e não ser "mais um"
+
 ### FORMATO DE SAÍDA
 - Markdown estruturado com headers claros
 - TABELAS para todas as comparações numéricas
 - Exemplos reais entre aspas com ID do reel
 - Cada insight sustentado por evidência (cite o reel)
-- O documento deve ser um MANUAL COMPLETO que eu possa pegar e aplicar HOJE no meu negócio para crescer no Instagram com conteúdo que converte`;
+- O documento deve ser um MANUAL COMPLETO que eu possa pegar e aplicar HOJE para crescer no Instagram com conteúdo que converte`;
 }
 
 export const ANALYSIS_SYSTEM_PROMPT = `Você é o maior especialista do mundo em engenharia reversa de conteúdo viral no Instagram, com foco em crescimento orgânico agressivo e conversão de seguidores em compradores.

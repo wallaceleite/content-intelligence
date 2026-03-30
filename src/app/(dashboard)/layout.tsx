@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { BarChart3, Users, Zap, Calendar, FileText } from "lucide-react";
+import { BarChart3, Users, Zap, Calendar, FileText, User, Flame } from "lucide-react";
 
 const navItems = [
-  { href: "/profiles", label: "Perfis", icon: Users },
+  { href: "/meu-perfil", label: "Meu Perfil", icon: Flame, highlight: true },
+  { href: "/profiles", label: "Concorrentes", icon: Users },
   { href: "/hooks", label: "Banco de Hooks", icon: Zap },
   { href: "/calendar", label: "Calendário", icon: Calendar },
   { href: "/analysis", label: "Análises", icon: FileText },
@@ -17,7 +18,7 @@ export default function DashboardLayout({
     <div className="flex h-screen">
       <aside className="w-64 border-r border-[var(--border)] bg-[var(--card)] flex flex-col">
         <div className="p-6 border-b border-[var(--border)]">
-          <Link href="/profiles" className="flex items-center gap-2">
+          <Link href="/meu-perfil" className="flex items-center gap-2">
             <BarChart3 className="w-6 h-6 text-[var(--accent)]" />
             <span className="text-lg font-bold">Content Intel</span>
           </Link>
@@ -28,7 +29,11 @@ export default function DashboardLayout({
             <Link
               key={item.href}
               href={item.href}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--muted)] transition-colors"
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${
+                item.highlight
+                  ? "text-[var(--accent)] font-medium hover:bg-[var(--accent)]/10"
+                  : "text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--muted)]"
+              }`}
             >
               <item.icon className="w-4 h-4" />
               {item.label}

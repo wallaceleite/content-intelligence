@@ -9,6 +9,16 @@ export const dynamic = "force-dynamic";
 
 const MY_USERNAME = "owallaceleite";
 
+function postLabel(post: any): string {
+  // Show hook text, or first line of caption, or shortcode as fallback
+  if (post.hook_text && post.hook_text.length > 5) return post.hook_text.slice(0, 55) + (post.hook_text.length > 55 ? "..." : "");
+  if (post.caption) {
+    const firstLine = post.caption.split(/[\n]/)[0]?.trim() || "";
+    return firstLine.slice(0, 55) + (firstLine.length > 55 ? "..." : "");
+  }
+  return post.shortcode || "—";
+}
+
 function StatCard({ label, value, sub, icon: Icon, color, trend }: {
   label: string; value: string; sub?: string; icon: any; color: string; trend?: "up" | "down" | "neutral";
 }) {
@@ -125,6 +135,9 @@ export default async function MeuPerfilPage() {
   const totalViews = allPosts.reduce((s, p) => s + (p.views_count || 0), 0);
   const totalLikes = allPosts.reduce((s, p) => s + (p.likes_count || 0), 0);
   const totalComments = allPosts.reduce((s, p) => s + (p.comments_count || 0), 0);
+  const totalSaves = allPosts.reduce((s, p) => s + (p.saves_count || 0), 0);
+  const totalShares = allPosts.reduce((s, p) => s + (p.shares_count || 0), 0);
+  const totalReach = allPosts.reduce((s, p) => s + (p.reach_count || 0), 0);
   const avgEng = allPosts.length
     ? Math.round((allPosts.reduce((s, p) => s + (p.engagement_rate || 0), 0) / allPosts.length) * 100) / 100
     : 0;
@@ -208,8 +221,21 @@ export default async function MeuPerfilPage() {
         )}
       </div>
 
-      {/* KPIs Row 1 */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 mb-6">
+      {/* Sync button */}
+      <div className="mb-6 p-4 border border-dashed border-[var(--border)] rounded-xl bg-[var(--card)] flex items-center justify-between">
+        <div>
+          <p className="text-sm font-medium">Sincronizar dados do Instagram</p>
+          <p className="text-xs text-[var(--muted-foreground)]">Atualiza saves, shares, reach e impressões via API oficial</p>
+        </div>
+        <form action="/api/instagram-sync" method="POST">
+          <button type="submit" className="px-4 py-2 bg-[var(--accent)] text-white text-sm rounded-lg hover:opacity-90 transition-opacity">
+            Sincronizar Agora
+          </button>
+        </form>
+      </div>
+
+      {/* KPIs Row 1 — Visão Geral */}
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 mb-4">
         <StatCard label="Seguidores" value={profile.followers_count?.toLocaleString("pt-BR") || "—"} icon={Users} color="text-blue-400" />
         <StatCard label="Posts" value={allPosts.length.toString()} sub={`${videos.length} vídeos | ${carousels.length} carrosséis | ${images.length} imgs`} icon={FileText} color="text-purple-400" />
         <StatCard label="Views Total" value={totalViews.toLocaleString("pt-BR")} icon={Eye} color="text-cyan-400" />
@@ -225,13 +251,36 @@ export default async function MeuPerfilPage() {
         />
       </div>
 
-      {/* KPIs Row 2 */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+      {/* KPIs Row 2 — Métricas Premium (Instagram API) */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-4">
+        <StatCard label="Saves Total" value={totalSaves.toLocaleString("pt-BR")} sub="Intenção de compra" icon={CheckCircle} color="text-emerald-400" />
+        <StatCard label="Shares Total" value={totalShares.toLocaleString("pt-BR")} sub="Referência social" icon={ArrowUpRight} color="text-blue-400" />
+        <StatCard label="Alcance Total" value={totalReach.toLocaleString("pt-BR")} sub="Contas únicas" icon={Eye} color="text-orange-400" />
         <StatCard label="Eng. Vídeos" value={`${engByType("video")}%`} icon={Flame} color="text-orange-400" />
         <StatCard label="Eng. Carrosséis" value={`${engByType("carousel")}%`} icon={Flame} color="text-blue-400" />
-        <StatCard label="Eng. Imagens" value={`${engByType("image")}%`} icon={Flame} color="text-green-400" />
         <StatCard label="Duração Média" value={`${avgDuration}s`} sub="Vídeos" icon={Clock} color="text-purple-400" />
       </div>
+
+      {/* Save Rate indicator */}
+      {totalViews > 0 && totalSaves > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-8">
+          <div className="border border-[var(--border)] rounded-xl p-4 bg-[var(--card)]">
+            <p className="text-xs text-[var(--muted-foreground)] mb-1">Save Rate (saves/views)</p>
+            <p className="text-xl font-bold text-emerald-400">{((totalSaves / totalViews) * 100).toFixed(2)}%</p>
+            <p className="text-[10px] text-[var(--muted-foreground)]">Acima de 2% = excelente</p>
+          </div>
+          <div className="border border-[var(--border)] rounded-xl p-4 bg-[var(--card)]">
+            <p className="text-xs text-[var(--muted-foreground)] mb-1">Share Rate (shares/views)</p>
+            <p className="text-xl font-bold text-blue-400">{((totalShares / totalViews) * 100).toFixed(2)}%</p>
+            <p className="text-[10px] text-[var(--muted-foreground)]">Acima de 1% = viral</p>
+          </div>
+          <div className="border border-[var(--border)] rounded-xl p-4 bg-[var(--card)]">
+            <p className="text-xs text-[var(--muted-foreground)] mb-1">Reach/Followers Rate</p>
+            <p className="text-xl font-bold text-orange-400">{profile.followers_count ? ((totalReach / profile.followers_count) * 100).toFixed(0) : "—"}%</p>
+            <p className="text-[10px] text-[var(--muted-foreground)]">Acima de 30% = boa distribuição</p>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         {/* Funnel Distribution */}
@@ -366,7 +415,7 @@ export default async function MeuPerfilPage() {
                 <span className="text-xs font-mono text-green-400 w-5">{i + 1}</span>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5">
-                    <span className="text-sm font-medium truncate">{post.shortcode}</span>
+                    <span className="text-sm font-medium truncate">{postLabel(post)}</span>
                     {post.funnel_stage && (
                       <span className={`px-1 py-0.5 rounded text-[9px] uppercase ${
                         post.funnel_stage === "tofu" ? "bg-blue-500/10 text-blue-400"
@@ -398,7 +447,7 @@ export default async function MeuPerfilPage() {
                 <span className="text-xs font-mono text-red-400 w-5">{i + 1}</span>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5">
-                    <span className="text-sm font-medium truncate">{post.shortcode}</span>
+                    <span className="text-sm font-medium truncate">{postLabel(post)}</span>
                     {post.funnel_stage && (
                       <span className={`px-1 py-0.5 rounded text-[9px] uppercase ${
                         post.funnel_stage === "tofu" ? "bg-blue-500/10 text-blue-400"

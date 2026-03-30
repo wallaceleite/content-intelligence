@@ -35,13 +35,15 @@ export default async function ProfileDetailPage({
         .order("engagement_rate", { ascending: false })
     : { data: [] };
 
-  const { data: analysis } = latestBatch
+  const { data: analysisRows } = latestBatch
     ? await supabaseAdmin
         .from("analyses")
         .select("*")
         .eq("batch_id", latestBatch.id)
-        .single()
-    : { data: null };
+        .order("created_at", { ascending: false })
+        .limit(1)
+    : { data: [] };
+  const analysis = analysisRows?.[0] || null;
 
   // Stats
   const totalViews = posts?.reduce((s, p) => s + p.views_count, 0) || 0;

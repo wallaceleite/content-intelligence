@@ -1,6 +1,19 @@
 import { classifyWithHaiku } from "./anthropic";
 
-// Classify post into funnel stage, hook type, CTA type
+function truncate(text: string, maxChars: number): string {
+  if (!text) return "";
+  return text.length > maxChars ? text.slice(0, maxChars) + "..." : text;
+}
+
+function extractJson(text: string): string {
+  // Try to find JSON in the response (handles markdown code blocks, extra text, etc.)
+  const jsonMatch = text.match(/\{[\s\S]*\}/);
+  if (jsonMatch) return jsonMatch[0];
+  const arrayMatch = text.match(/\[[\s\S]*\]/);
+  if (arrayMatch) return arrayMatch[0];
+  return text;
+}
+
 export async function classifyPost(post: {
   caption: string;
   transcript: string;
@@ -13,41 +26,51 @@ export async function classifyPost(post: {
   ctaText: string;
   contentTheme: string;
 }> {
-  const system = `Você é um classificador de conteúdo do Instagram especializado em funil de vendas. Responda APENAS em JSON válido, sem markdown, sem explicações.`;
+  // Truncate to avoid blowing up Haiku context
+  const caption = truncate(post.caption || "", 500);
+  const transcript = truncate(post.transcript || "", 1500);
+  const hashtags = (post.hashtags || []).slice(0, 10).join(", ");
 
-  const prompt = `Classifique este post do Instagram:
+  const system = `Você classifica posts do Instagram. Responda SOMENTE com JSON puro. Sem markdown. Sem explicação. Sem \`\`\`. Apenas o objeto JSON.`;
 
-LEGENDA: ${post.caption || "Sem legenda"}
-TRANSCRIÇÃO: ${post.transcript || "Sem transcrição"}
-HASHTAGS: ${post.hashtags?.join(", ") || "Nenhuma"}
+  const prompt = `LEGENDA: ${caption || "Sem legenda"}
 
-Retorne APENAS este JSON:
-{
-  "funnelStage": "tofu" | "mofu" | "bofu",
-  "hookType": "pergunta" | "afirmacao_chocante" | "curiosidade" | "controversia" | "promessa" | "historia" | "pattern_interrupt" | "dado_estatistico" | "outro",
-  "hookText": "texto exato dos primeiros 2-3 segundos/linhas",
-  "ctaType": "none" | "soft" | "medium" | "hard",
-  "ctaText": "texto do CTA se houver",
-  "contentTheme": "tema principal em 2-3 palavras"
-}
+TRANSCRIÇÃO (primeiros segundos): ${transcript || "Sem transcrição"}
 
-Critérios:
-- TOFU: conteúdo amplo, dores genéricas, trending, atrai novos seguidores
-- MOFU: how-to, frameworks, prova/credibilidade, educa a audiência
-- BOFU: CTA direto, oferta, urgência, depoimentos, vende
-- Soft CTA: seguir, salvar, compartilhar, comentar
-- Medium CTA: link na bio, manda DM, se inscreve
-- Hard CTA: compre, vagas limitadas, oferta direta, preço`;
+HASHTAGS: ${hashtags || "Nenhuma"}
+
+Responda com este JSON exato (preencha os valores):
+{"funnelStage":"tofu","hookType":"curiosidade","hookText":"texto dos primeiros 3 segundos","ctaType":"none","ctaText":"","contentTheme":"tema em 3 palavras"}
+
+Valores permitidos:
+- funnelStage: "tofu" (conteúdo amplo, viral, atrai novos), "mofu" (ensina, prova, educa), "bofu" (vende, CTA direto, oferta)
+- hookType: "pergunta", "afirmacao_chocante", "curiosidade", "controversia", "promessa", "historia", "pattern_interrupt", "dado_estatistico"
+- ctaType: "none", "soft" (seguir/salvar/compartilhar), "medium" (link bio/DM), "hard" (compre/vagas limitadas)
+- hookText: copie o texto EXATO dos primeiros 2-3 segundos da transcrição ou primeira linha da legenda
+- contentTheme: o tema principal em 2-3 palavras`;
 
   const result = await classifyWithHaiku(system, prompt);
 
   try {
-    return JSON.parse(result.trim());
+    const json = extractJson(result);
+    const parsed = JSON.parse(json);
+    // Validate required fields exist
+    if (!parsed.funnelStage || !parsed.hookType) throw new Error("missing fields");
+    return {
+      funnelStage: parsed.funnelStage,
+      hookType: parsed.hookType,
+      hookText: parsed.hookText || "",
+      ctaType: parsed.ctaType || "none",
+      ctaText: parsed.ctaText || "",
+      contentTheme: parsed.contentTheme || "",
+    };
   } catch {
+    // Fallback: extract hook from transcript manually
+    const firstLine = (post.transcript || post.caption || "").split(/[.\n]/)[0]?.trim().slice(0, 100) || "";
     return {
       funnelStage: "tofu",
       hookType: "outro",
-      hookText: "",
+      hookText: firstLine,
       ctaType: "none",
       ctaText: "",
       contentTheme: "não classificado",
@@ -55,7 +78,6 @@ Critérios:
   }
 }
 
-// Classify comments by intent
 export async function classifyComments(
   comments: { text: string; author: string }[]
 ): Promise<
@@ -68,44 +90,32 @@ export async function classifyComments(
 > {
   if (!comments.length) return [];
 
-  // Process in batches of 20
-  const batchSize = 20;
+  const batchSize = 15;
   const results: { text: string; author: string; intentType: string; sentiment: string }[] = [];
 
   for (let i = 0; i < comments.length; i += batchSize) {
     const batch = comments.slice(i, i + batchSize);
 
-    const system = `Classificador de comentários do Instagram para análise de intenção de compra. Responda APENAS em JSON array válido.`;
+    const system = `Classificador de comentários. Responda SOMENTE com JSON array puro. Sem markdown. Sem explicação. Sem \`\`\`.`;
 
     const commentsText = batch
-      .map((c, idx) => `[${idx}] @${c.author}: ${c.text}`)
+      .map((c, idx) => `[${idx}] ${truncate(c.text, 150)}`)
       .join("\n");
 
-    const prompt = `Classifique cada comentário:
+    const prompt = `Classifique cada comentário por intenção:
 
 ${commentsText}
 
-Retorne APENAS um JSON array:
-[
-  {
-    "index": 0,
-    "intentType": "purchase_intent" | "objection" | "audience_voice" | "social_proof" | "praise" | "question" | "neutral",
-    "sentiment": "positive" | "negative" | "neutral"
-  }
-]
+Responda com JSON array:
+[{"index":0,"intentType":"neutral","sentiment":"neutral"}]
 
-Critérios de intentType:
-- purchase_intent: "onde compro?", "preço?", "tem curso?", "link?", "como contratar?"
-- objection: "caro", "não funciona", "já tentei", dúvida sobre eficácia
-- audience_voice: descreve seus problemas, desafios, situação
-- social_proof: "alguém já testou?", "funciona mesmo?", pede validação
-- praise: elogio direto ao conteúdo ou criador
-- question: pergunta sobre o tema (não sobre compra)
-- neutral: emoji, tag de amigo, comentário genérico`;
+intentType: "purchase_intent" (quer comprar), "objection" (objeção), "audience_voice" (descreve problema), "social_proof" (pede validação), "praise" (elogio), "question" (pergunta), "neutral" (genérico)
+sentiment: "positive", "negative", "neutral"`;
 
     try {
       const result = await classifyWithHaiku(system, prompt);
-      const parsed = JSON.parse(result.trim());
+      const json = extractJson(result);
+      const parsed = JSON.parse(json);
 
       for (const item of parsed) {
         const comment = batch[item.index];
@@ -119,7 +129,6 @@ Critérios de intentType:
         }
       }
     } catch {
-      // Fallback: mark as neutral
       for (const comment of batch) {
         results.push({
           text: comment.text,

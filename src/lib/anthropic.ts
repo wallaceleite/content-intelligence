@@ -10,7 +10,7 @@ export async function classifyWithHaiku(
 ): Promise<string> {
   const response = await anthropic.messages.create({
     model: "claude-haiku-4-5-20251001",
-    max_tokens: 2000,
+    max_tokens: 1000,
     system: systemPrompt,
     messages: [{ role: "user", content: userPrompt }],
   });
@@ -22,7 +22,7 @@ export async function analyzeWithSonnet(
   userPrompt: string
 ): Promise<{ text: string; inputTokens: number; outputTokens: number }> {
   const response = await anthropic.messages.create({
-    model: "claude-sonnet-4-20250514",
+    model: "claude-sonnet-4-6-20250610",
     max_tokens: 16000,
     system: systemPrompt,
     messages: [{ role: "user", content: userPrompt }],

@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { BarChart3, Users, Zap, Calendar, FileText, User, Flame } from "lucide-react";
+import { BarChart3, Users, Zap, Calendar, FileText, User, Flame, Target } from "lucide-react";
 
 const navItems = [
   { href: "/meu-perfil", label: "Meu Perfil", icon: Flame, highlight: true },
+  { href: "/estrategia", label: "Estratégia", icon: Target, highlight: true },
   { href: "/profiles", label: "Concorrentes", icon: Users },
   { href: "/hooks", label: "Banco de Hooks", icon: Zap },
   { href: "/calendar", label: "Calendário", icon: Calendar },

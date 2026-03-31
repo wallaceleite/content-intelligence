@@ -4,7 +4,7 @@ import { FileText, DollarSign, Clock } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export default async function AnalysisPage() {
   const { data: analyses } = await supabaseAdmin

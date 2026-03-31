@@ -2,7 +2,7 @@ import Link from "next/link";
 import { supabaseAdmin } from "@/lib/supabase";
 import { Users, TrendingUp, Eye, MessageSquare } from "lucide-react";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export default async function ProfilesPage() {
   const { data: profiles } = await supabaseAdmin

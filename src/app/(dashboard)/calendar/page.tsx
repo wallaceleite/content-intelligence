@@ -1,7 +1,7 @@
 import { supabaseAdmin } from "@/lib/supabase";
 import { Calendar } from "lucide-react";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export default async function CalendarPage() {
   const { data: items } = await supabaseAdmin

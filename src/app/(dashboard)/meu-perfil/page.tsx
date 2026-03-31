@@ -5,7 +5,7 @@ import {
   Users, Clock, Hash, FileText, Flame, Shield, Lightbulb, Calendar
 } from "lucide-react";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 const MY_USERNAME = "owallaceleite";
 

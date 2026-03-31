@@ -5,7 +5,7 @@ import {
   MessageSquare, Eye, Heart, BookOpen
 } from "lucide-react";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 const MY_USERNAME = "owallaceleite";
 

@@ -2,7 +2,7 @@ import { supabaseAdmin } from "@/lib/supabase";
 import { notFound } from "next/navigation";
 import { BarChart3, TrendingUp, MessageSquare, Heart, Eye, Zap, Target, ArrowUpRight } from "lucide-react";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export default async function ProfileDetailPage({
   params,

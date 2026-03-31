@@ -4,6 +4,7 @@ import {
   Target, Zap, AlertTriangle, CheckCircle, ArrowUpRight, ArrowDownRight,
   Users, Clock, Hash, FileText, Flame, Shield, Lightbulb, Calendar
 } from "lucide-react";
+import { GrowthChart, FunnelDonut, PerformanceBar, BenchmarkRadar } from "@/components/dashboard/Charts";
 
 export const revalidate = 60;
 
@@ -282,10 +283,34 @@ export default async function MeuPerfilPage() {
         </div>
       )}
 
+      {/* CHARTS ROW */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        {/* Funnel Distribution */}
         <div className="border border-[var(--border)] rounded-xl p-6 bg-[var(--card)]">
-          <SectionHeader icon={Target} title="Distribuição de Funil" color="text-[var(--accent)]" />
+          <SectionHeader icon={TrendingUp} title="Performance por Post" color="text-green-400" />
+          <PerformanceBar
+            data={top5.map((p) => ({
+              name: postLabel(p).slice(0, 30),
+              value: p.engagement_rate || 0,
+              fill: p.funnel_stage === "bofu" ? "#22c55e" : p.funnel_stage === "mofu" ? "#f59e0b" : "#7c3aed",
+            }))}
+          />
+        </div>
+        <div className="border border-[var(--border)] rounded-xl p-6 bg-[var(--card)]">
+          <SectionHeader icon={Target} title="Funil de Conteúdo" color="text-[var(--accent)]" />
+          <FunnelDonut
+            data={[
+              { name: "TOFU", value: funnel.tofu, color: "#3b82f6" },
+              { name: "MOFU", value: funnel.mofu, color: "#f59e0b" },
+              { name: "BOFU", value: funnel.bofu, color: "#22c55e" },
+            ]}
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        {/* Funnel Distribution (detailed) */}
+        <div className="border border-[var(--border)] rounded-xl p-6 bg-[var(--card)]">
+          <SectionHeader icon={Target} title="Distribuição de Funil (detalhe)" color="text-[var(--accent)]" />
           <div className="space-y-3">
             {[
               { stage: "TOFU", count: funnel.tofu, color: "bg-blue-500", desc: "Atração — conteúdo amplo", ideal: "50%" },

@@ -22,7 +22,7 @@ export default async function ProfilesPage() {
       </div>
 
       {!profiles?.length ? (
-        <div className="border border-[var(--border)] rounded-xl p-12 text-center">
+        <div className="glass-card p-12 text-center">
           <Users className="w-12 h-12 text-[var(--muted-foreground)] mx-auto mb-4" />
           <h3 className="text-lg font-medium mb-2">Nenhum perfil ainda</h3>
           <p className="text-[var(--muted-foreground)] text-sm max-w-md mx-auto">
@@ -41,7 +41,7 @@ export default async function ProfilesPage() {
               <Link
                 key={profile.id}
                 href={`/profiles/${profile.id}`}
-                className="border border-[var(--border)] rounded-xl p-6 hover:border-[var(--accent)] transition-colors bg-[var(--card)]"
+                className="glass-card p-6"
               >
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-10 h-10 rounded-full bg-[var(--accent)] flex items-center justify-center text-white font-bold">

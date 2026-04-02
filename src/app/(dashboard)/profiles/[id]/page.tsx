@@ -99,7 +99,7 @@ export default async function ProfileDetailPage({
         ].map((stat) => (
           <div
             key={stat.label}
-            className="border border-[var(--border)] rounded-xl p-4 bg-[var(--card)]"
+            className="glass-card p-4"
           >
             <div className="flex items-center gap-2 mb-2">
               <stat.icon className={`w-4 h-4 ${stat.color}`} />
@@ -111,7 +111,7 @@ export default async function ProfileDetailPage({
       </div>
 
       {/* Funnel Distribution */}
-      <div className="border border-[var(--border)] rounded-xl p-6 bg-[var(--card)] mb-8">
+      <div className="glass-card p-6 mb-8">
         <h2 className="font-semibold mb-4 flex items-center gap-2">
           <Target className="w-4 h-4 text-[var(--accent)]" />
           Distribuição de Funil
@@ -141,7 +141,7 @@ export default async function ProfileDetailPage({
       </div>
 
       {/* Top Posts */}
-      <div className="border border-[var(--border)] rounded-xl bg-[var(--card)] mb-8">
+      <div className="glass-card mb-8">
         <div className="p-6 border-b border-[var(--border)]">
           <h2 className="font-semibold flex items-center gap-2">
             <Zap className="w-4 h-4 text-[var(--accent)]" />
@@ -200,7 +200,7 @@ export default async function ProfileDetailPage({
 
       {/* Analysis */}
       {analysis?.full_analysis && (
-        <div className="border border-[var(--border)] rounded-xl bg-[var(--card)]">
+        <div className="glass-card">
           <div className="p-6 border-b border-[var(--border)] flex items-center justify-between">
             <h2 className="font-semibold flex items-center gap-2">
               <BarChart3 className="w-4 h-4 text-[var(--accent)]" />

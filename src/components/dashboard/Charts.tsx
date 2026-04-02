@@ -7,17 +7,17 @@ import {
 } from "recharts";
 
 const COLORS = {
-  accent: "#7c3aed",
-  green: "#22c55e",
-  yellow: "#f59e0b",
-  blue: "#3b82f6",
+  accent: "#00E5CC",
+  green: "#10B981",
+  yellow: "#F59E0B",
+  blue: "#3B82F6",
   pink: "#ec4899",
   orange: "#f97316",
-  cyan: "#06b6d4",
-  card: "#18181b",
-  border: "#27272a",
-  muted: "#a1a1aa",
-  fg: "#fafafa",
+  cyan: "#00E5CC",
+  card: "rgba(255,255,255,0.03)",
+  border: "rgba(255,255,255,0.08)",
+  muted: "#8A9E9B",
+  fg: "#F0F0F0",
 };
 
 const formatK = (v: number) => (v >= 1000 ? `${(v / 1000).toFixed(1)}k` : v.toString());
@@ -25,10 +25,17 @@ const formatK = (v: number) => (v >= 1000 ? `${(v / 1000).toFixed(1)}k` : v.toSt
 function ChartTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-[#18181b] border border-[#27272a] rounded-lg px-3 py-2 text-xs">
-      {label && <p className="text-[#a1a1aa] font-medium mb-1">{label}</p>}
+    <div style={{
+      background: "rgba(17,21,20,0.95)",
+      border: "1px solid rgba(255,255,255,0.08)",
+      borderRadius: "12px",
+      backdropFilter: "blur(20px)",
+      padding: "8px 12px",
+      fontSize: "12px",
+    }}>
+      {label && <p style={{ color: COLORS.muted, fontWeight: 500, marginBottom: "4px" }}>{label}</p>}
       {payload.map((item: any) => (
-        <p key={item.name} style={{ color: item.color || item.fill }} className="font-semibold">
+        <p key={item.name} style={{ color: item.color || item.fill, fontWeight: 600 }}>
           {item.name}: {typeof item.value === "number" ? item.value.toLocaleString("pt-BR") : item.value}
         </p>
       ))}
@@ -83,7 +90,7 @@ export function FunnelDonut({ data }: { data: { name: string; value: number; col
             <div className="w-2.5 h-2.5 rounded-full" style={{ background: d.color }} />
             <span className="text-xs">
               <span className="font-bold" style={{ color: d.color }}>{d.name}</span>
-              <span className="text-[#a1a1aa] ml-1">{d.value} ({Math.round((d.value / total) * 100)}%)</span>
+              <span style={{ color: COLORS.muted }} className="ml-1">{d.value} ({Math.round((d.value / total) * 100)}%)</span>
             </span>
           </div>
         ))}
@@ -130,6 +137,6 @@ export function BenchmarkRadar({ data }: { data: { metric: string; atual: number
 
 function EmptyChart({ text }: { text: string }) {
   return (
-    <div className="flex items-center justify-center h-40 text-xs text-[#a1a1aa]">{text}</div>
+    <div className="flex items-center justify-center h-40 text-xs" style={{ color: COLORS.muted }}>{text}</div>
   );
 }

@@ -231,7 +231,7 @@ export default async function EstrategiaPage() {
       </div>
 
       {/* ALERTS */}
-      <div className="border border-[var(--border)] rounded-xl p-6 bg-[var(--card)] mb-8">
+      <div className="glass-card p-6 mb-8">
         <h2 className="font-semibold flex items-center gap-2 mb-4">
           <AlertTriangle className="w-4 h-4 text-yellow-400" />
           Alertas e Cobranças
@@ -245,7 +245,7 @@ export default async function EstrategiaPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         {/* FREQUENCY SCORECARD */}
-        <div className="border border-[var(--border)] rounded-xl p-6 bg-[var(--card)]">
+        <div className="glass-card p-6">
           <h2 className="font-semibold flex items-center gap-2 mb-4">
             <Flame className="w-4 h-4 text-orange-400" />
             Frequência (últimos 7 dias)
@@ -284,7 +284,7 @@ export default async function EstrategiaPage() {
         </div>
 
         {/* FUNNEL HEALTH */}
-        <div className="border border-[var(--border)] rounded-xl p-6 bg-[var(--card)]">
+        <div className="glass-card p-6">
           <h2 className="font-semibold flex items-center gap-2 mb-4">
             <Target className="w-4 h-4 text-[var(--accent)]" />
             Saúde do Funil
@@ -324,7 +324,7 @@ export default async function EstrategiaPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         {/* CTA HEALTH */}
-        <div className="border border-[var(--border)] rounded-xl p-6 bg-[var(--card)]">
+        <div className="glass-card p-6">
           <h2 className="font-semibold flex items-center gap-2 mb-4">
             <Zap className="w-4 h-4 text-yellow-400" />
             Saúde dos CTAs
@@ -348,7 +348,7 @@ export default async function EstrategiaPage() {
         </div>
 
         {/* FORMAT MIX */}
-        <div className="border border-[var(--border)] rounded-xl p-6 bg-[var(--card)]">
+        <div className="glass-card p-6">
           <h2 className="font-semibold flex items-center gap-2 mb-4">
             <BarChart3 className="w-4 h-4 text-cyan-400" />
             Mix de Formatos
@@ -372,7 +372,7 @@ export default async function EstrategiaPage() {
       </div>
 
       {/* BENCHMARKS DE MERCADO */}
-      <div className="border border-[var(--border)] rounded-xl bg-[var(--card)] mb-8">
+      <div className="glass-card mb-8">
         <div className="p-6 border-b border-[var(--border)]">
           <h2 className="font-semibold flex items-center gap-2">
             <BookOpen className="w-4 h-4 text-purple-400" />
@@ -396,7 +396,7 @@ export default async function EstrategiaPage() {
       </div>
 
       {/* WEEKLY PLAN */}
-      <div className="border border-[var(--border)] rounded-xl bg-[var(--card)]">
+      <div className="glass-card">
         <div className="p-6 border-b border-[var(--border)] flex items-center justify-between">
           <h2 className="font-semibold flex items-center gap-2">
             <Calendar className="w-4 h-4 text-green-400" />

@@ -20,7 +20,7 @@ export default async function CalendarPage() {
       </div>
 
       {!items?.length ? (
-        <div className="border border-[var(--border)] rounded-xl p-12 text-center">
+        <div className="glass-card p-12 text-center">
           <Calendar className="w-12 h-12 text-[var(--muted-foreground)] mx-auto mb-4" />
           <h3 className="text-lg font-medium mb-2">Nenhum calendário ainda</h3>
           <p className="text-[var(--muted-foreground)] text-sm">
@@ -32,7 +32,7 @@ export default async function CalendarPage() {
           {items.map((item) => (
             <div
               key={item.id}
-              className="border border-[var(--border)] rounded-xl p-4 bg-[var(--card)]"
+              className="glass-card p-4"
             >
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-bold">Dia {item.day_number}</span>

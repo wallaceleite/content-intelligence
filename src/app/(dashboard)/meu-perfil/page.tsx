@@ -24,7 +24,7 @@ function StatCard({ label, value, sub, icon: Icon, color, trend }: {
   label: string; value: string; sub?: string; icon: any; color: string; trend?: "up" | "down" | "neutral";
 }) {
   return (
-    <div className="border border-[var(--border)] rounded-xl p-4 bg-[var(--card)]">
+    <div className="glass-card p-4">
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
           <Icon className={`w-4 h-4 ${color}`} />
@@ -58,7 +58,7 @@ export default async function MeuPerfilPage() {
 
   if (!profile) {
     return (
-      <div className="border border-[var(--border)] rounded-xl p-12 text-center">
+      <div className="glass-card p-12 text-center">
         <Users className="w-12 h-12 text-[var(--muted-foreground)] mx-auto mb-4" />
         <h3 className="text-lg font-medium mb-2">Perfil @{MY_USERNAME} não encontrado</h3>
         <p className="text-[var(--muted-foreground)] text-sm">Execute o workflow no n8n para o seu perfil primeiro.</p>
@@ -205,7 +205,10 @@ export default async function MeuPerfilPage() {
     <div>
       {/* Header */}
       <div className="flex items-center gap-4 mb-8">
-        <div className="w-14 h-14 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white text-xl font-bold">
+        <div className="w-14 h-14 rounded-full flex items-center justify-center text-xl font-bold" style={{
+          background: "linear-gradient(135deg, var(--accent), var(--primary-700))",
+          color: "var(--accent-foreground)",
+        }}>
           W
         </div>
         <div className="flex-1">
@@ -223,13 +226,16 @@ export default async function MeuPerfilPage() {
       </div>
 
       {/* Sync button */}
-      <div className="mb-6 p-4 border border-dashed border-[var(--border)] rounded-xl bg-[var(--card)] flex items-center justify-between">
+      <div className="mb-6 p-4 glass-card flex items-center justify-between" style={{ borderStyle: "dashed" }}>
         <div>
           <p className="text-sm font-medium">Sincronizar dados do Instagram</p>
-          <p className="text-xs text-[var(--muted-foreground)]">Atualiza saves, shares, reach e impressões via API oficial</p>
+          <p className="text-xs" style={{ color: "var(--text-secondary)" }}>Atualiza saves, shares, reach e impressões via API oficial</p>
         </div>
         <form action="/api/instagram-sync" method="POST">
-          <button type="submit" className="px-4 py-2 bg-[var(--accent)] text-white text-sm rounded-lg hover:opacity-90 transition-opacity">
+          <button type="submit" className="px-4 py-2 text-sm rounded-xl font-medium hover:opacity-90 transition-opacity" style={{
+            background: "var(--accent)",
+            color: "var(--accent-foreground)",
+          }}>
             Sincronizar Agora
           </button>
         </form>
@@ -265,17 +271,17 @@ export default async function MeuPerfilPage() {
       {/* Save Rate indicator */}
       {totalViews > 0 && totalSaves > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-8">
-          <div className="border border-[var(--border)] rounded-xl p-4 bg-[var(--card)]">
+          <div className="glass-card p-4">
             <p className="text-xs text-[var(--muted-foreground)] mb-1">Save Rate (saves/views)</p>
             <p className="text-xl font-bold text-emerald-400">{((totalSaves / totalViews) * 100).toFixed(2)}%</p>
             <p className="text-[10px] text-[var(--muted-foreground)]">Acima de 2% = excelente</p>
           </div>
-          <div className="border border-[var(--border)] rounded-xl p-4 bg-[var(--card)]">
+          <div className="glass-card p-4">
             <p className="text-xs text-[var(--muted-foreground)] mb-1">Share Rate (shares/views)</p>
             <p className="text-xl font-bold text-blue-400">{((totalShares / totalViews) * 100).toFixed(2)}%</p>
             <p className="text-[10px] text-[var(--muted-foreground)]">Acima de 1% = viral</p>
           </div>
-          <div className="border border-[var(--border)] rounded-xl p-4 bg-[var(--card)]">
+          <div className="glass-card p-4">
             <p className="text-xs text-[var(--muted-foreground)] mb-1">Reach/Followers Rate</p>
             <p className="text-xl font-bold text-orange-400">{profile.followers_count ? ((totalReach / profile.followers_count) * 100).toFixed(0) : "—"}%</p>
             <p className="text-[10px] text-[var(--muted-foreground)]">Acima de 30% = boa distribuição</p>
@@ -285,17 +291,17 @@ export default async function MeuPerfilPage() {
 
       {/* CHARTS ROW */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <div className="border border-[var(--border)] rounded-xl p-6 bg-[var(--card)]">
+        <div className="glass-card p-6">
           <SectionHeader icon={TrendingUp} title="Performance por Post" color="text-green-400" />
           <PerformanceBar
             data={top5.map((p) => ({
               name: postLabel(p).slice(0, 30),
               value: p.engagement_rate || 0,
-              fill: p.funnel_stage === "bofu" ? "#22c55e" : p.funnel_stage === "mofu" ? "#f59e0b" : "#7c3aed",
+              fill: p.funnel_stage === "bofu" ? "#10B981" : p.funnel_stage === "mofu" ? "#F59E0B" : "#00E5CC",
             }))}
           />
         </div>
-        <div className="border border-[var(--border)] rounded-xl p-6 bg-[var(--card)]">
+        <div className="glass-card p-6">
           <SectionHeader icon={Target} title="Funil de Conteúdo" color="text-[var(--accent)]" />
           <FunnelDonut
             data={[
@@ -309,7 +315,7 @@ export default async function MeuPerfilPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         {/* Funnel Distribution (detailed) */}
-        <div className="border border-[var(--border)] rounded-xl p-6 bg-[var(--card)]">
+        <div className="glass-card p-6">
           <SectionHeader icon={Target} title="Distribuição de Funil (detalhe)" color="text-[var(--accent)]" />
           <div className="space-y-3">
             {[
@@ -338,7 +344,7 @@ export default async function MeuPerfilPage() {
         </div>
 
         {/* CTA Distribution */}
-        <div className="border border-[var(--border)] rounded-xl p-6 bg-[var(--card)]">
+        <div className="glass-card p-6">
           <SectionHeader icon={Zap} title="Distribuição de CTAs" color="text-yellow-400" />
           <div className="space-y-3">
             {[
@@ -375,7 +381,7 @@ export default async function MeuPerfilPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         {/* Comment Intent Analysis */}
-        <div className="border border-[var(--border)] rounded-xl p-6 bg-[var(--card)]">
+        <div className="glass-card p-6">
           <SectionHeader icon={MessageSquare} title="Intenção dos Comentários" color="text-green-400" />
           {comments.length === 0 ? (
             <p className="text-sm text-[var(--muted-foreground)]">Nenhum comentário classificado ainda.</p>
@@ -407,7 +413,7 @@ export default async function MeuPerfilPage() {
         </div>
 
         {/* Content Themes */}
-        <div className="border border-[var(--border)] rounded-xl p-6 bg-[var(--card)]">
+        <div className="glass-card p-6">
           <SectionHeader icon={Hash} title="Temas de Conteúdo" color="text-purple-400" />
           {topThemes.length === 0 ? (
             <p className="text-sm text-[var(--muted-foreground)]">Temas ainda não classificados.</p>
@@ -430,7 +436,7 @@ export default async function MeuPerfilPage() {
       {/* Top and Bottom Performers side by side */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         {/* Top 5 */}
-        <div className="border border-[var(--border)] rounded-xl bg-[var(--card)]">
+        <div className="glass-card">
           <div className="p-4 border-b border-[var(--border)]">
             <SectionHeader icon={TrendingUp} title="Top 5 — Replicar" color="text-green-400" />
           </div>
@@ -462,7 +468,7 @@ export default async function MeuPerfilPage() {
         </div>
 
         {/* Bottom 5 */}
-        <div className="border border-[var(--border)] rounded-xl bg-[var(--card)]">
+        <div className="glass-card">
           <div className="p-4 border-b border-[var(--border)]">
             <SectionHeader icon={TrendingDown} title="Bottom 5 — Evitar" color="text-red-400" />
           </div>
@@ -495,7 +501,7 @@ export default async function MeuPerfilPage() {
 
       {/* My Best Hooks */}
       {hooks && hooks.length > 0 && (
-        <div className="border border-[var(--border)] rounded-xl bg-[var(--card)] mb-8">
+        <div className="glass-card mb-8">
           <div className="p-6 border-b border-[var(--border)]">
             <SectionHeader icon={Zap} title="Meus Melhores Hooks" color="text-yellow-400" />
           </div>
@@ -526,7 +532,7 @@ export default async function MeuPerfilPage() {
 
       {/* Competitor Benchmark */}
       {competitors && competitors.length > 0 && (
-        <div className="border border-[var(--border)] rounded-xl p-6 bg-[var(--card)] mb-8">
+        <div className="glass-card p-6 mb-8">
           <SectionHeader icon={Shield} title="Benchmark vs Concorrentes" color="text-cyan-400" />
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -544,7 +550,7 @@ export default async function MeuPerfilPage() {
                   <td className="py-2.5 text-right">{profile.followers_count?.toLocaleString("pt-BR") || "—"}</td>
                   <td className="py-2.5 text-right font-bold">{avgEng}%</td>
                   <td className="py-2.5 text-right">
-                    <span className="px-2 py-0.5 rounded-full text-[10px] bg-purple-500/10 text-purple-400">meu perfil</span>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] bg-[var(--accent-muted)] text-[var(--accent)]">meu perfil</span>
                   </td>
                 </tr>
                 {competitors.map((comp) => {
@@ -571,7 +577,7 @@ export default async function MeuPerfilPage() {
 
       {/* Strategic Insights from Analysis */}
       {analysis?.full_analysis && (
-        <div className="border border-[var(--border)] rounded-xl bg-[var(--card)]">
+        <div className="glass-card">
           <div className="p-6 border-b border-[var(--border)] flex items-center justify-between">
             <SectionHeader icon={Lightbulb} title="Diagnóstico Estratégico Completo" color="text-yellow-400" />
             <span className="text-xs text-[var(--muted-foreground)]">

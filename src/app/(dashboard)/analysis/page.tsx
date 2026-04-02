@@ -22,7 +22,7 @@ export default async function AnalysisPage() {
       </div>
 
       {!analyses?.length ? (
-        <div className="border border-[var(--border)] rounded-xl p-12 text-center">
+        <div className="glass-card p-12 text-center">
           <FileText className="w-12 h-12 text-[var(--muted-foreground)] mx-auto mb-4" />
           <h3 className="text-lg font-medium mb-2">Nenhuma análise ainda</h3>
           <p className="text-[var(--muted-foreground)] text-sm">
@@ -35,7 +35,7 @@ export default async function AnalysisPage() {
             <Link
               key={analysis.id}
               href={`/profiles/${analysis.profile_id}`}
-              className="block border border-[var(--border)] rounded-xl p-6 bg-[var(--card)] hover:border-[var(--accent)] transition-colors"
+              className="block glass-card p-6"
             >
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-3">

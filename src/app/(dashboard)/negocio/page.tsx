@@ -119,7 +119,7 @@ function SectionForm({
   const completePct = Math.round((filledCount / totalFields) * 100);
 
   return (
-    <div className="border border-[var(--border)] rounded-xl bg-[var(--card)] overflow-hidden">
+    <div className="glass-card overflow-hidden">
       <button
         onClick={() => setOpen(!open)}
         className="w-full p-5 flex items-center gap-4 hover:bg-[var(--muted)]/30 transition-colors"
@@ -187,7 +187,8 @@ function SectionForm({
           <button
             onClick={() => onSave(sectionKey, formData)}
             disabled={saving === sectionKey}
-            className="flex items-center gap-2 px-4 py-2 bg-[var(--accent)] text-white text-sm rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
+            className="flex items-center gap-2 px-4 py-2 text-sm rounded-xl font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
+            style={{ background: "var(--accent)", color: "var(--accent-foreground)" }}
           >
             {saving === sectionKey ? (
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -301,7 +302,7 @@ export default function NegocioPage() {
         ))}
       </div>
 
-      <div className="mt-8 p-6 border border-dashed border-[var(--border)] rounded-xl text-center">
+      <div className="mt-8 p-6 glass-card text-center" style={{ borderStyle: "dashed" }}>
         <Brain className="w-8 h-8 text-[var(--muted-foreground)] mx-auto mb-3" />
         <p className="text-sm text-[var(--muted-foreground)]">
           Esses dados alimentam automaticamente: análises de concorrentes, geração de roteiros,

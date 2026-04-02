@@ -50,7 +50,7 @@ export default async function HooksPage() {
       </div>
 
       {!hooks?.length ? (
-        <div className="border border-[var(--border)] rounded-xl p-12 text-center">
+        <div className="glass-card p-12 text-center">
           <Zap className="w-12 h-12 text-[var(--muted-foreground)] mx-auto mb-4" />
           <h3 className="text-lg font-medium mb-2">Nenhum hook ainda</h3>
           <p className="text-[var(--muted-foreground)] text-sm">
@@ -58,7 +58,7 @@ export default async function HooksPage() {
           </p>
         </div>
       ) : (
-        <div className="border border-[var(--border)] rounded-xl bg-[var(--card)] divide-y divide-[var(--border)]">
+        <div className="glass-card divide-y divide-[var(--border)]">
           {hooks.map((hook, i) => (
             <div key={hook.id} className="p-4 flex items-start gap-4">
               <span className="text-sm font-mono text-[var(--muted-foreground)] w-6 pt-0.5">

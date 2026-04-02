@@ -51,7 +51,7 @@ export default async function ProfileDetailPage({
   const totalComments = posts?.reduce((s, p) => s + p.comments_count, 0) || 0;
   const avgEngagement = posts?.length
     ? Math.round(
-        (posts.reduce((s, p) => s + (p.engagement_rate || 0), 0) / posts.length) * 100
+        (posts.reduce((s, p) => s + Math.min(p.engagement_rate || 0, 100), 0) / posts.length) * 100
       ) / 100
     : 0;
 

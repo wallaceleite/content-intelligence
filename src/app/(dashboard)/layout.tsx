@@ -1,15 +1,16 @@
-import Link from "next/link";
-import { BarChart3, Users, Zap, Calendar, FileText, Flame, Target, Brain, LogOut } from "lucide-react";
+import { BarChart3 } from "lucide-react";
 import { LogoutButton } from "./logout-button";
+import { NavLink } from "./nav-link";
+import Link from "next/link";
 
 const navItems = [
-  { href: "/meu-perfil", label: "Meu Perfil", icon: Flame, highlight: true },
-  { href: "/negocio", label: "Meu Negócio", icon: Brain, highlight: true },
-  { href: "/estrategia", label: "Estratégia", icon: Target, highlight: true },
-  { href: "/profiles", label: "Concorrentes", icon: Users },
-  { href: "/hooks", label: "Banco de Hooks", icon: Zap },
-  { href: "/calendar", label: "Calendário", icon: Calendar },
-  { href: "/analysis", label: "Análises", icon: FileText },
+  { href: "/meu-perfil", label: "Meu Perfil", iconName: "Flame", highlight: true },
+  { href: "/negocio", label: "Meu Negócio", iconName: "Brain", highlight: true },
+  { href: "/estrategia", label: "Estratégia", iconName: "Target", highlight: true },
+  { href: "/profiles", label: "Concorrentes", iconName: "Users" },
+  { href: "/hooks", label: "Banco de Hooks", iconName: "Zap" },
+  { href: "/calendar", label: "Calendário", iconName: "Calendar" },
+  { href: "/analysis", label: "Análises", iconName: "FileText" },
 ];
 
 export default function DashboardLayout({
@@ -18,34 +19,38 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex h-screen">
-      <aside className="w-64 border-r border-[var(--border)] bg-[var(--card)] flex flex-col">
-        <div className="p-6 border-b border-[var(--border)]">
-          <Link href="/meu-perfil" className="flex items-center gap-2">
-            <BarChart3 className="w-6 h-6 text-[var(--accent)]" />
-            <span className="text-lg font-bold">Content Intel</span>
+    <div className="flex h-screen" style={{ background: "var(--background)" }}>
+      <aside className="w-64 flex flex-col border-r" style={{
+        background: "var(--background-elevated)",
+        borderColor: "var(--border-glass)",
+      }}>
+        <div className="p-6 border-b" style={{ borderColor: "var(--border-glass)" }}>
+          <Link href="/meu-perfil" className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{
+              background: "var(--accent-muted)",
+            }}>
+              <BarChart3 className="w-4 h-4" style={{ color: "var(--accent)" }} />
+            </div>
+            <span className="text-base font-semibold tracking-tight" style={{
+              fontFamily: "'Space Grotesk', system-ui",
+            }}>
+              Content Intel
+            </span>
           </Link>
         </div>
 
-        <nav className="flex-1 p-4 space-y-1">
+        <nav className="flex-1 p-3 space-y-0.5">
           {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${
-                item.highlight
-                  ? "text-[var(--accent)] font-medium hover:bg-[var(--accent)]/10"
-                  : "text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--muted)]"
-              }`}
-            >
-              <item.icon className="w-4 h-4" />
-              {item.label}
-            </Link>
+            <NavLink key={item.href} {...item} />
           ))}
         </nav>
 
-        <div className="p-4 border-t border-[var(--border)] flex items-center justify-between">
-          <span className="text-xs text-[var(--muted-foreground)]">Content Intel v1.0</span>
+        <div className="p-4 border-t flex items-center justify-between" style={{
+          borderColor: "var(--border-glass)",
+        }}>
+          <span className="text-xs" style={{ color: "var(--text-tertiary)" }}>
+            Content Intel v1.0
+          </span>
           <LogoutButton />
         </div>
       </aside>

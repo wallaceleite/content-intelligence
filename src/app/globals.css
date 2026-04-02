@@ -1,22 +1,119 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
 :root {
-  --background: #09090b;
-  --foreground: #fafafa;
-  --card: #18181b;
-  --card-foreground: #fafafa;
-  --border: #27272a;
-  --muted: #27272a;
-  --muted-foreground: #a1a1aa;
-  --accent: #7c3aed;
-  --accent-foreground: #fafafa;
-  --success: #22c55e;
-  --warning: #f59e0b;
-  --danger: #ef4444;
+  /* — Primary (Cyan/Turquoise) — */
+  --primary-50: #B0FFF2;
+  --primary-100: #80FFEB;
+  --primary-300: #40F2DC;
+  --primary-500: #00E5CC;
+  --primary-700: #0A9E8E;
+  --primary-800: #066B60;
+  --primary-900: #003D36;
+
+  /* — Theme tokens (dark default) — */
+  --background: #0A0A0A;
+  --background-elevated: #111514;
+  --foreground: #F0F0F0;
+  --card: rgba(255,255,255,0.03);
+  --card-foreground: #F0F0F0;
+  --border: rgba(255,255,255,0.06);
+  --border-glass: rgba(255,255,255,0.08);
+  --muted: rgba(255,255,255,0.04);
+  --muted-foreground: #8A9E9B;
+  --accent: #00E5CC;
+  --accent-hover: #40F2DC;
+  --accent-subtle: rgba(0,229,204,0.06);
+  --accent-muted: rgba(0,229,204,0.12);
+  --accent-foreground: #0A0A0A;
+  --text-secondary: #8A9E9B;
+  --text-tertiary: #4A5C59;
+
+  /* — Semantic — */
+  --success: #10B981;
+  --success-light: #34D399;
+  --warning: #F59E0B;
+  --warning-light: #FBBF24;
+  --danger: #EF4444;
+  --danger-light: #F87171;
+  --info: #3B82F6;
+  --info-light: #60A5FA;
+
+  /* — Spacing — */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-6: 24px;
+  --sp-8: 32px;
+
+  /* — Radius — */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
+
+  /* — Shadows — */
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+  --shadow-lg: 0 12px 32px rgba(0,0,0,0.12);
+  --shadow-glass: 0 8px 32px rgba(0,229,204,0.06);
+
+  /* — Transitions — */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --duration: 250ms;
+}
+
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  line-height: 1.5;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  letter-spacing: -0.02em;
+}
+
+/* — Glass card effect — */
+.glass-card {
+  background: var(--card);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: var(--shadow-glass);
+  transition: border-color var(--duration) var(--ease-out),
+              box-shadow var(--duration) var(--ease-out);
+}
+
+.glass-card:hover {
+  border-color: rgba(0,229,204,0.15);
+  box-shadow: 0 8px 32px rgba(0,229,204,0.1);
+}
+
+/* — Scrollbar — */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-glass);
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--muted-foreground);
 }

@@ -17,7 +17,19 @@ export function LogoutButton() {
     <button
       onClick={handleLogout}
       title="Sair"
-      className="p-1.5 rounded-lg text-[var(--muted-foreground)] hover:text-red-400 hover:bg-red-400/10 transition-colors"
+      className="p-1.5 rounded-lg transition-all"
+      style={{
+        color: "var(--text-tertiary)",
+        transitionDuration: "var(--duration)",
+      }}
+      onMouseEnter={(e) => {
+        (e.currentTarget as HTMLElement).style.color = "var(--danger)";
+        (e.currentTarget as HTMLElement).style.background = "rgba(239,68,68,0.1)";
+      }}
+      onMouseLeave={(e) => {
+        (e.currentTarget as HTMLElement).style.color = "var(--text-tertiary)";
+        (e.currentTarget as HTMLElement).style.background = "transparent";
+      }}
     >
       <LogOut className="w-4 h-4" />
     </button>

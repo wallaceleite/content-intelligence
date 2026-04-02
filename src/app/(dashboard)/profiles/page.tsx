@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { supabaseAdmin } from "@/lib/supabase";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 import { Users, TrendingUp, Eye, MessageSquare } from "lucide-react";
 
 export const revalidate = 60;

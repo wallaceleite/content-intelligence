@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabase";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 
 const IG_TOKEN = process.env.INSTAGRAM_ACCESS_TOKEN!;
 const IG_API = "https://graph.instagram.com/v21.0";

@@ -1,4 +1,4 @@
-import { supabaseAdmin } from "@/lib/supabase";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 import Link from "next/link";
 import { FileText, DollarSign, Clock } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";

@@ -1,4 +1,4 @@
-import { supabaseAdmin } from "@/lib/supabase";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 import { notFound } from "next/navigation";
 import { BarChart3, TrendingUp, MessageSquare, Heart, Eye, Zap, Target, ArrowUpRight } from "lucide-react";
 

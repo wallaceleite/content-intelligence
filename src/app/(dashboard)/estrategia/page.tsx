@@ -1,4 +1,4 @@
-import { supabaseAdmin } from "@/lib/supabase";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 import {
   Target, AlertTriangle, CheckCircle, XCircle, Clock, Flame,
   TrendingUp, Calendar, BarChart3, Zap, ArrowRight, Shield,

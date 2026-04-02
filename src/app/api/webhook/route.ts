@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabase";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 import { calculateDerivedMetrics } from "@/lib/metrics";
 
 // Receives scraped data from n8n after Apify + filtering

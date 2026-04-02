@@ -1,4 +1,4 @@
-import { supabaseAdmin } from "@/lib/supabase";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 import {
   BarChart3, TrendingUp, TrendingDown, Eye, Heart, MessageSquare,
   Target, Zap, AlertTriangle, CheckCircle, ArrowUpRight, ArrowDownRight,

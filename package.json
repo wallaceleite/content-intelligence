@@ -12,6 +12,7 @@
   "license": "ISC",
   "dependencies": {
     "@anthropic-ai/sdk": "^0.80.0",
+    "@supabase/ssr": "^0.10.0",
     "@supabase/supabase-js": "^2.100.1",
     "@tailwindcss/postcss": "^4.2.2",
     "@types/node": "^25.5.0",

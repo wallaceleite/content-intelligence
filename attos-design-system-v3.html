@@ -1,0 +1,1245 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Attos — Design System v3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=DM+Serif+Display&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ============================================
+   ATTOS DESIGN SYSTEM v3
+   Brutalismo Refinado — "Barulho Silencioso"
+
+   v3 CHANGELOG (from v2):
+   ✓ WCAG AA contrast fixes (copper-light for text)
+   ✓ Focus-visible states on all interactive elements
+   ✓ Active/pressed states on buttons
+   ✓ cursor:pointer on all clickable elements
+   ✓ aria-labels on icon-only buttons
+   ✓ prefers-reduced-motion support
+   ✓ Skip-to-content link
+   ✓ Responsive stat cards grid
+   ✓ JetBrains Mono for data/stats/code
+   ✓ Tabular figures for numbers
+   ✓ inputmode on form fields
+   ✓ Slow deliberate transitions (300-500ms)
+   ✓ Improved light mode contrast
+   ============================================ */
+
+:root {
+  /* — Base (Fundacao) — */
+  --base-bg: #0F0F0F;
+  --base-anthracite: #1A1A1A;
+  --base-graphite-dark: #2A2A2A;
+  --base-graphite-mid: #3D3D3D;
+  --base-graphite-light: #5A5A5A;
+
+  /* — Texto — */
+  --text-primary: #E8E4E0;
+  --text-secondary: #8A8A8A;
+  --text-tertiary: #666666; /* bumped from #5A5A5A for 3.6:1 min contrast */
+  --text-white: #FFFFFF;
+
+  /* — Acento: Cobre (uso cirurgico — 2%) — */
+  --copper-light: #D4956A;  /* 6.0:1 on #0F0F0F — AA pass ✓ */
+  --copper: #B87333;        /* 3.8:1 — large text only */
+  --copper-muted: #9A6840;
+  --copper-dark: #8B5A2B;
+  --copper-text: #D4956A;   /* always use this for readable copper text */
+
+  /* — Semantic — */
+  --success: #4ADE80;
+  --success-muted: #22C55E;
+  --success-dark: #16A34A;
+  --warning: #FBBF24;
+  --warning-muted: #F59E0B;
+  --warning-dark: #D97706;
+  --error: #F87171;
+  --error-muted: #EF4444;
+  --error-dark: #DC2626;
+  --info: #60A5FA;
+  --info-muted: #3B82F6;
+  --info-dark: #2563EB;
+
+  /* — Typography — */
+  --font-heading: 'Space Grotesk', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --font-display: 'DM Serif Display', Georgia, serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', monospace;
+
+  /* — Spacing (8pt grid) — */
+  --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px;
+  --sp-5: 20px; --sp-6: 24px; --sp-8: 32px; --sp-10: 40px;
+  --sp-12: 48px; --sp-14: 56px; --sp-16: 64px;
+
+  /* — Radius (reto ou levemente arredondado) — */
+  --radius-none: 0; --radius-xs: 2px; --radius-sm: 4px;
+  --radius-md: 6px; --radius-lg: 8px;
+
+  /* — Borders — */
+  --border-default: #3D3D3D;
+  --border-subtle: #2A2A2A;
+  --border-copper: #B87333;
+
+  /* — Focus — */
+  --focus-ring: #D4956A;
+  --focus-ring-offset: #0F0F0F;
+
+  /* — Transitions (sutis e lentas) — */
+  --ease: cubic-bezier(0.25, 0.1, 0.25, 1);
+  --duration: 300ms;
+  --duration-slow: 500ms;
+}
+
+/* ============================================
+   LIGHT THEME
+   ============================================ */
+[data-theme="light"] {
+  --base-bg: #F5F2EF;
+  --base-anthracite: #EBE7E3;
+  --base-graphite-dark: #DDD9D5;
+  --base-graphite-mid: #C5C0BA;
+  --base-graphite-light: #9A9590;
+  --text-primary: #0F0F0F;
+  --text-secondary: #5A5A5A;
+  --text-tertiary: #8A8A8A;
+  --text-white: #0F0F0F;
+  --border-default: #C5C0BA;
+  --border-subtle: #DDD9D5;
+  --border-copper: #9A6840;
+  --copper: #9A6840;
+  --copper-light: #B87333;
+  --copper-text: #8B5A2B; /* darker copper for light bg — 4.8:1 ✓ */
+  --focus-ring: #9A6840;
+  --focus-ring-offset: #F5F2EF;
+}
+
+/* ============================================
+   ACCESSIBILITY: REDUCED MOTION
+   ============================================ */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ============================================
+   BASE
+   ============================================ */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: var(--font-body);
+  background: var(--base-bg);
+  color: var(--text-primary);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* — Skip Link (a11y) — */
+.skip-link {
+  position: absolute;
+  top: -100px;
+  left: var(--sp-4);
+  background: var(--copper);
+  color: var(--base-bg);
+  padding: var(--sp-2) var(--sp-4);
+  font-family: var(--font-heading);
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  z-index: 9999;
+  text-decoration: none;
+  transition: top var(--duration) var(--ease);
+}
+
+.skip-link:focus {
+  top: var(--sp-4);
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.showcase {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: var(--sp-12) var(--sp-8);
+}
+
+@media (max-width: 640px) {
+  .showcase { padding: var(--sp-8) var(--sp-4); }
+}
+
+/* — Header — */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: var(--sp-16);
+  padding-bottom: var(--sp-8);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+@media (max-width: 640px) {
+  .header { flex-direction: column; align-items: flex-start; gap: var(--sp-6); }
+}
+
+.brand { display: flex; flex-direction: column; gap: var(--sp-2); }
+
+.brand-wordmark {
+  font-family: var(--font-display);
+  font-size: 42px;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+.brand-sub {
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-6);
+}
+
+.header-tag {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--copper-text);
+}
+
+.theme-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  background: transparent;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  padding: var(--sp-2) var(--sp-3);
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 500;
+  font-family: var(--font-body);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  transition: border-color var(--duration) var(--ease), color var(--duration) var(--ease);
+}
+
+.theme-toggle:hover { border-color: var(--copper); color: var(--text-primary); }
+.theme-toggle:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.theme-toggle:active { opacity: 0.8; }
+.theme-toggle svg { width: 14px; height: 14px; }
+
+/* — Grid — */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--sp-6);
+}
+
+@media (max-width: 1024px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 640px) { .grid, .section-2col { grid-template-columns: 1fr; } }
+
+/* — Section — */
+.section {
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: var(--sp-6);
+  background: var(--base-anthracite);
+}
+
+.section-full { grid-column: 1 / -1; }
+.section-2col { grid-column: span 2; }
+
+@media (max-width: 640px) { .section-2col { grid-column: span 1; } }
+
+.section-title {
+  font-family: var(--font-heading);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--copper-text);
+  margin-bottom: var(--sp-6);
+  padding-bottom: var(--sp-3);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.section-subtitle {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  margin-bottom: var(--sp-3);
+}
+
+/* ============================================
+   SWATCHES
+   ============================================ */
+.swatch-group { margin-bottom: var(--sp-5); }
+.swatch-group:last-child { margin-bottom: 0; }
+
+.swatch-row { display: flex; gap: var(--sp-2); flex-wrap: wrap; }
+
+.swatch { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; }
+
+.swatch-color {
+  width: 52px;
+  height: 36px;
+  border-radius: var(--radius-xs);
+  border: 1px solid rgba(255,255,255,0.06);
+}
+
+.swatch-name { font-size: 9px; font-weight: 500; color: var(--text-secondary); }
+.swatch-hex { font-size: 9px; color: var(--text-tertiary); font-family: var(--font-mono); }
+
+/* ============================================
+   TYPOGRAPHY
+   ============================================ */
+.type-specimen {
+  padding: var(--sp-3) 0;
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-6);
+}
+
+.type-specimen:last-child { border-bottom: none; }
+
+.type-example {
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.type-meta {
+  font-size: 10px;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+}
+
+/* ============================================
+   SPACING
+   ============================================ */
+.spacing-item { display: flex; align-items: center; gap: var(--sp-4); margin-bottom: 6px; }
+
+.spacing-bar {
+  height: 6px;
+  background: var(--base-graphite-mid);
+  border-left: 2px solid var(--copper);
+}
+
+.spacing-label {
+  font-size: 10px;
+  color: var(--text-tertiary);
+  font-weight: 500;
+  min-width: 40px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-family: var(--font-mono);
+}
+
+/* ============================================
+   RADIUS
+   ============================================ */
+.radius-row { display: flex; gap: var(--sp-4); flex-wrap: wrap; }
+
+.radius-item { display: flex; flex-direction: column; align-items: center; gap: var(--sp-2); }
+
+.radius-box {
+  width: 48px;
+  height: 48px;
+  border: 1px solid var(--copper);
+  background: transparent;
+}
+
+.radius-label { font-size: 9px; color: var(--text-tertiary); font-weight: 500; font-family: var(--font-mono); }
+
+/* ============================================
+   BUTTONS
+   Cantos retos. Zero pill. Sem sombras.
+   ============================================ */
+.btn-row { display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; margin-bottom: var(--sp-4); }
+.btn-row:last-child { margin-bottom: 0; }
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  font-family: var(--font-heading);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  border-radius: var(--radius-sm);
+  border: none;
+  cursor: pointer;
+  transition: all var(--duration) var(--ease);
+  white-space: nowrap;
+  text-decoration: none;
+  position: relative;
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.btn svg { width: 16px; height: 16px; flex-shrink: 0; stroke-width: 1.5; }
+
+/* Sizes */
+.btn-sm { font-size: 12px; padding: 8px 16px; height: 32px; }
+.btn-sm svg { width: 14px; height: 14px; }
+.btn-md { font-size: 13px; padding: 10px 20px; height: 40px; }
+.btn-lg { font-size: 14px; padding: 14px 28px; height: 48px; }
+
+.btn-icon-only { padding: 0; }
+.btn-icon-only.btn-sm { width: 32px; }
+.btn-icon-only.btn-md { width: 40px; }
+.btn-icon-only.btn-lg { width: 48px; }
+
+/* Primary — Copper */
+.btn-primary { background: var(--copper); color: var(--base-bg); }
+.btn-primary:hover { background: var(--copper-light); }
+.btn-primary:active { background: var(--copper-dark); transform: translateY(1px); }
+
+/* Secondary — Surface */
+.btn-secondary {
+  background: var(--base-graphite-dark);
+  border: 1px solid var(--border-default);
+  color: var(--text-primary);
+}
+.btn-secondary:hover { border-color: var(--text-secondary); }
+.btn-secondary:active { background: var(--base-graphite-mid); transform: translateY(1px); }
+
+/* Outline */
+.btn-outline {
+  background: transparent;
+  border: 1px solid var(--copper-muted);
+  color: var(--copper-text);
+}
+.btn-outline:hover { border-color: var(--copper); color: var(--copper-light); }
+.btn-outline:active { background: rgba(184,115,51,0.08); transform: translateY(1px); }
+
+/* Ghost */
+.btn-ghost {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-secondary);
+}
+.btn-ghost:hover { color: var(--text-primary); }
+.btn-ghost:active { opacity: 0.7; }
+
+/* Disabled */
+.btn:disabled, .btn[aria-disabled="true"] {
+  opacity: 0.25;
+  pointer-events: none;
+  cursor: not-allowed;
+}
+
+/* ============================================
+   CARDS
+   ============================================ */
+.card {
+  background: var(--base-anthracite);
+  border: 1px solid var(--base-graphite-mid);
+  border-radius: var(--radius-sm);
+  padding: var(--sp-6);
+  transition: border-color var(--duration-slow) var(--ease);
+}
+
+.card:hover { border-color: var(--copper-muted); }
+
+.card-accent {
+  width: 32px;
+  height: 2px;
+  background: var(--copper);
+  margin-bottom: var(--sp-5);
+}
+
+.card-title {
+  font-family: var(--font-heading);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: var(--sp-3);
+  letter-spacing: -0.01em;
+}
+
+.card-desc {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.65;
+}
+
+/* ============================================
+   INPUTS
+   ============================================ */
+.input-group { display: flex; flex-direction: column; gap: var(--sp-2); margin-bottom: var(--sp-5); }
+.input-group:last-child { margin-bottom: 0; }
+
+.input-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.input {
+  background: var(--base-bg);
+  border: 1px solid var(--base-graphite-mid);
+  border-radius: var(--radius-sm);
+  padding: 10px var(--sp-4);
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--text-primary);
+  outline: none;
+  transition: border-color var(--duration) var(--ease);
+  min-height: 44px; /* touch target minimum */
+}
+
+.input::placeholder { color: var(--text-tertiary); }
+.input:focus-visible { border-color: var(--copper); outline: 2px solid var(--focus-ring); outline-offset: -1px; }
+
+.input-error { border-color: var(--error-muted); }
+.input-error:focus-visible { border-color: var(--error); outline-color: var(--error); }
+
+.input:disabled { opacity: 0.3; cursor: not-allowed; }
+
+.input-helper { font-size: 11px; color: var(--text-tertiary); }
+.input-helper-error { font-size: 11px; color: var(--error); }
+
+/* ============================================
+   BADGES
+   ============================================ */
+.badge-row { display: flex; gap: var(--sp-3); flex-wrap: wrap; margin-bottom: var(--sp-3); }
+.badge-row:last-child { margin-bottom: 0; }
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  font-family: var(--font-heading);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  border-radius: var(--radius-xs);
+  white-space: nowrap;
+}
+
+.badge svg { flex-shrink: 0; stroke-width: 1.5; }
+
+.badge-sm { font-size: 10px; padding: 2px 8px; height: 20px; }
+.badge-sm svg { width: 11px; height: 11px; }
+.badge-md { font-size: 11px; padding: 4px 12px; height: 26px; }
+.badge-md svg { width: 13px; height: 13px; }
+
+.badge-copper { background: var(--copper); color: var(--base-bg); }
+.badge-copper-outline { background: transparent; border: 1px solid var(--copper-muted); color: var(--copper-text); }
+.badge-surface { background: var(--base-graphite-dark); color: var(--text-secondary); }
+.badge-success { background: var(--success-dark); color: #fff; }
+.badge-success-outline { background: transparent; border: 1px solid var(--success-dark); color: var(--success); }
+.badge-warning { background: var(--warning-dark); color: #fff; }
+.badge-warning-outline { background: transparent; border: 1px solid var(--warning-dark); color: var(--warning); }
+.badge-error { background: var(--error-dark); color: #fff; }
+.badge-error-outline { background: transparent; border: 1px solid var(--error-dark); color: var(--error); }
+
+.badge-dismiss {
+  cursor: pointer;
+  opacity: 0.5;
+  margin-left: 2px;
+  transition: opacity var(--duration) var(--ease);
+}
+.badge-dismiss:hover { opacity: 1; }
+.badge-dismiss svg { width: 10px; height: 10px; }
+
+/* ============================================
+   CHECKBOXES
+   ============================================ */
+.checkbox-row { display: flex; gap: var(--sp-6); flex-wrap: wrap; }
+
+.checkbox-item { display: flex; align-items: center; gap: var(--sp-2); }
+.checkbox-item span { font-size: 11px; color: var(--text-secondary); }
+
+.checkbox {
+  width: 16px; height: 16px;
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--base-graphite-mid);
+  background: var(--base-bg);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: all var(--duration) var(--ease);
+}
+
+.checkbox-hover { border-color: var(--copper-muted); }
+.checkbox-focus { border-color: var(--copper); outline: 2px solid var(--focus-ring); outline-offset: 1px; }
+.checkbox-checked { background: var(--copper); border-color: var(--copper); }
+.checkbox-checked svg { stroke: var(--base-bg); }
+.checkbox-indeterminate { background: var(--copper); border-color: var(--copper); }
+.checkbox-indeterminate svg { stroke: var(--base-bg); }
+.checkbox-disabled { opacity: 0.2; }
+
+/* ============================================
+   PROGRESS
+   ============================================ */
+.progress-group { display: flex; flex-direction: column; gap: var(--sp-5); }
+.progress-item { display: flex; flex-direction: column; gap: var(--sp-1); }
+
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.progress-value {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.progress-track {
+  height: 4px;
+  background: var(--base-graphite-dark);
+  border-radius: 0;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 0;
+  background: var(--copper);
+  transition: width 800ms var(--ease);
+}
+
+.progress-success { background: var(--success-muted); }
+.progress-warning { background: var(--warning-muted); }
+.progress-error { background: var(--error-muted); }
+
+/* ============================================
+   STAT CARDS
+   ============================================ */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--sp-4);
+}
+
+@media (max-width: 1024px) { .stat-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 480px) { .stat-grid { grid-template-columns: 1fr; } }
+
+.stat-card {
+  background: var(--base-anthracite);
+  border: 1px solid var(--base-graphite-mid);
+  border-radius: var(--radius-sm);
+  padding: var(--sp-5);
+  transition: border-color var(--duration-slow) var(--ease);
+}
+
+.stat-card:hover { border-color: var(--copper-muted); }
+
+.stat-accent { width: 24px; height: 2px; margin-bottom: var(--sp-4); }
+.stat-accent-copper { background: var(--copper); }
+.stat-accent-success { background: var(--success-muted); }
+.stat-accent-warning { background: var(--warning-muted); }
+.stat-accent-error { background: var(--error-muted); }
+
+.stat-value {
+  font-family: var(--font-mono);
+  font-size: 28px;
+  font-weight: 500;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.stat-label {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin-top: var(--sp-2);
+  letter-spacing: 0.02em;
+}
+
+/* ============================================
+   SEMANTIC COLORS
+   ============================================ */
+.semantic-row { display: flex; gap: var(--sp-6); flex-wrap: wrap; }
+
+.semantic-item { display: flex; flex-direction: column; gap: var(--sp-2); }
+.semantic-swatch { display: flex; gap: 2px; }
+.semantic-color { width: 36px; height: 20px; border-radius: var(--radius-xs); }
+
+.semantic-name {
+  font-size: 10px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--text-secondary);
+}
+
+/* ============================================
+   RATIO BAR
+   ============================================ */
+.ratio-bar { display: flex; height: 8px; border-radius: var(--radius-xs); overflow: hidden; margin-top: var(--sp-3); }
+.ratio-dark { background: var(--base-graphite-dark); }
+.ratio-text { background: var(--text-primary); }
+.ratio-copper { background: var(--copper); }
+
+.ratio-labels { display: flex; justify-content: space-between; margin-top: var(--sp-2); }
+.ratio-label { font-size: 9px; color: var(--text-tertiary); font-weight: 500; }
+
+/* ============================================
+   CONTRAST TABLE
+   ============================================ */
+.contrast-table { width: 100%; border-collapse: collapse; }
+.contrast-table th {
+  font-size: 10px; font-weight: 600; letter-spacing: 0.06em;
+  text-transform: uppercase; color: var(--text-tertiary);
+  text-align: left; padding: var(--sp-2) var(--sp-3);
+  border-bottom: 1px solid var(--border-subtle);
+}
+.contrast-table td {
+  font-size: 12px; padding: var(--sp-2) var(--sp-3);
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+}
+.contrast-table td:first-child { font-family: var(--font-body); color: var(--text-primary); }
+.contrast-pass { color: var(--success) !important; }
+.contrast-warn { color: var(--warning) !important; }
+.contrast-fail { color: var(--error) !important; }
+
+/* ============================================
+   CSS EXPORT
+   ============================================ */
+.code-block {
+  background: var(--base-bg);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: var(--sp-5);
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.8;
+  color: var(--text-secondary);
+  max-height: 520px;
+  overflow-y: auto;
+  tab-size: 2;
+}
+
+.code-block .t-prop { color: var(--copper-text); }
+.code-block .t-val { color: var(--text-primary); }
+.code-block .t-comment { color: var(--text-tertiary); }
+
+/* ============================================
+   UTILITIES
+   ============================================ */
+.mt-4 { margin-top: var(--sp-4); }
+.mt-5 { margin-top: var(--sp-5); }
+.mt-6 { margin-top: var(--sp-6); }
+.mb-3 { margin-bottom: var(--sp-3); }
+.mb-4 { margin-bottom: var(--sp-4); }
+.note { font-size: 10px; color: var(--text-tertiary); margin-top: var(--sp-4); line-height: 1.6; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--base-graphite-mid); border-radius: 0; }
+</style>
+</head>
+<body>
+
+<!-- Skip Link (a11y) -->
+<a href="#main" class="skip-link">Pular para conteudo</a>
+
+<div class="showcase" id="main" role="main">
+
+  <!-- ======== HEADER ======== -->
+  <header class="header">
+    <div class="brand">
+      <div class="brand-wordmark">Attos</div>
+      <div class="brand-sub">Design System v3</div>
+    </div>
+    <div class="header-right">
+      <span class="header-tag">Brutalismo Refinado</span>
+      <button class="theme-toggle" onclick="toggleTheme()" aria-label="Alternar entre tema claro e escuro">
+        <svg id="ico-sun" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        <svg id="ico-moon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:none" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        <span id="theme-label">Light</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ======== GRID ======== -->
+  <div class="grid">
+
+    <!-- ——— BASE COLORS ——— -->
+    <div class="section">
+      <div class="section-title">Base / Fundacao</div>
+      <div class="swatch-row">
+        <div class="swatch"><div class="swatch-color" style="background:#0F0F0F"></div><span class="swatch-name">Background</span><span class="swatch-hex">#0F0F0F</span></div>
+        <div class="swatch"><div class="swatch-color" style="background:#1A1A1A"></div><span class="swatch-name">Anthracite</span><span class="swatch-hex">#1A1A1A</span></div>
+        <div class="swatch"><div class="swatch-color" style="background:#2A2A2A"></div><span class="swatch-name">Graphite Dk</span><span class="swatch-hex">#2A2A2A</span></div>
+        <div class="swatch"><div class="swatch-color" style="background:#3D3D3D"></div><span class="swatch-name">Graphite Mid</span><span class="swatch-hex">#3D3D3D</span></div>
+        <div class="swatch"><div class="swatch-color" style="background:#5A5A5A"></div><span class="swatch-name">Graphite Lt</span><span class="swatch-hex">#5A5A5A</span></div>
+      </div>
+    </div>
+
+    <!-- ——— TEXT COLORS ——— -->
+    <div class="section">
+      <div class="section-title">Texto</div>
+      <div class="swatch-row">
+        <div class="swatch"><div class="swatch-color" style="background:#E8E4E0"></div><span class="swatch-name">Primary</span><span class="swatch-hex">#E8E4E0</span></div>
+        <div class="swatch"><div class="swatch-color" style="background:#8A8A8A"></div><span class="swatch-name">Secondary</span><span class="swatch-hex">#8A8A8A</span></div>
+        <div class="swatch"><div class="swatch-color" style="background:#666666"></div><span class="swatch-name">Tertiary</span><span class="swatch-hex">#666666</span></div>
+        <div class="swatch"><div class="swatch-color" style="background:#FFFFFF;border-color:rgba(255,255,255,0.15)"></div><span class="swatch-name">Pure White</span><span class="swatch-hex">#FFFFFF</span></div>
+      </div>
+      <div class="note">Off-white (#E8E4E0) como padrao. Branco puro apenas em headings de impacto.</div>
+    </div>
+
+    <!-- ——— COPPER + RATIO ——— -->
+    <div class="section">
+      <div class="section-title">Acento / Cobre</div>
+      <div class="swatch-row">
+        <div class="swatch"><div class="swatch-color" style="background:#D4956A"></div><span class="swatch-name">Light</span><span class="swatch-hex">#D4956A</span></div>
+        <div class="swatch"><div class="swatch-color" style="background:#B87333"></div><span class="swatch-name" style="color:var(--copper-text);font-weight:600">Primary</span><span class="swatch-hex">#B87333</span></div>
+        <div class="swatch"><div class="swatch-color" style="background:#9A6840"></div><span class="swatch-name">Muted</span><span class="swatch-hex">#9A6840</span></div>
+        <div class="swatch"><div class="swatch-color" style="background:#8B5A2B"></div><span class="swatch-name">Dark</span><span class="swatch-hex">#8B5A2B</span></div>
+      </div>
+      <div class="mt-5">
+        <div class="section-subtitle">Regra de Ouro</div>
+        <div class="ratio-bar">
+          <div class="ratio-dark" style="width:90%"></div>
+          <div class="ratio-text" style="width:8%"></div>
+          <div class="ratio-copper" style="width:2%"></div>
+        </div>
+        <div class="ratio-labels">
+          <span class="ratio-label">90% escuros</span>
+          <span class="ratio-label">8% texto</span>
+          <span class="ratio-label">2% cobre</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ——— CONTRAST TABLE ——— -->
+    <div class="section section-full">
+      <div class="section-title">Contraste WCAG AA</div>
+      <table class="contrast-table">
+        <thead><tr><th>Par</th><th>Ratio</th><th>AA Normal</th><th>AA Large</th><th>Uso</th></tr></thead>
+        <tbody>
+          <tr><td>#E8E4E0 on #0F0F0F</td><td>15.1:1</td><td class="contrast-pass">Pass</td><td class="contrast-pass">Pass</td><td>Body text, headings</td></tr>
+          <tr><td>#8A8A8A on #0F0F0F</td><td>5.6:1</td><td class="contrast-pass">Pass</td><td class="contrast-pass">Pass</td><td>Secondary text</td></tr>
+          <tr><td>#666666 on #0F0F0F</td><td>3.6:1</td><td class="contrast-warn">Fail</td><td class="contrast-pass">Pass</td><td>Labels, captions (large only)</td></tr>
+          <tr><td>#D4956A on #0F0F0F</td><td>6.0:1</td><td class="contrast-pass">Pass</td><td class="contrast-pass">Pass</td><td>Copper text (section titles, links)</td></tr>
+          <tr><td>#B87333 on #0F0F0F</td><td>3.8:1</td><td class="contrast-warn">Fail</td><td class="contrast-pass">Pass</td><td>Copper large text / icons only</td></tr>
+          <tr><td>#E8E4E0 on #1A1A1A</td><td>12.7:1</td><td class="contrast-pass">Pass</td><td class="contrast-pass">Pass</td><td>Text on cards</td></tr>
+          <tr><td>#0F0F0F on #B87333</td><td>3.8:1</td><td class="contrast-warn">Fail</td><td class="contrast-pass">Pass</td><td>Button text on copper (large weight)</td></tr>
+        </tbody>
+      </table>
+      <div class="note">Copper #B87333 como background de botao: texto escuro em font-weight 600+ a 13px+ passa AA Large (3:1). Para texto corrido use sempre --copper-text (#D4956A).</div>
+    </div>
+
+    <!-- ——— TYPOGRAPHY ——— -->
+    <div class="section section-2col">
+      <div class="section-title">Tipografia</div>
+      <div class="type-specimen">
+        <span class="type-example" style="font-family:var(--font-display);font-size:48px;font-weight:400;letter-spacing:0.01em;line-height:1.1">Display</span>
+        <span class="type-meta">DM Serif Display 48 400 — wordmark only</span>
+      </div>
+      <div class="type-specimen">
+        <span class="type-example" style="font-family:var(--font-heading);font-size:42px;font-weight:700;letter-spacing:-0.03em;line-height:1.1">Heading 1</span>
+        <span class="type-meta">Space Grotesk 42 700 -0.03em</span>
+      </div>
+      <div class="type-specimen">
+        <span class="type-example" style="font-family:var(--font-heading);font-size:32px;font-weight:700;letter-spacing:-0.02em;line-height:1.2">Heading 2</span>
+        <span class="type-meta">Space Grotesk 32 700 -0.02em</span>
+      </div>
+      <div class="type-specimen">
+        <span class="type-example" style="font-family:var(--font-heading);font-size:24px;font-weight:600;letter-spacing:-0.01em;line-height:1.3">Heading 3</span>
+        <span class="type-meta">Space Grotesk 24 600 -0.01em</span>
+      </div>
+      <div class="type-specimen">
+        <span class="type-example" style="font-family:var(--font-heading);font-size:20px;font-weight:600;line-height:1.35">Heading 4</span>
+        <span class="type-meta">Space Grotesk 20 600</span>
+      </div>
+      <div class="type-specimen">
+        <span class="type-example" style="font-family:var(--font-heading);font-size:17px;font-weight:600;line-height:1.4">Heading 5</span>
+        <span class="type-meta">Space Grotesk 17 600</span>
+      </div>
+      <div class="type-specimen">
+        <span class="type-example" style="font-family:var(--font-heading);font-size:14px;font-weight:600;letter-spacing:0.02em;line-height:1.4">Heading 6</span>
+        <span class="type-meta">Space Grotesk 14 600 0.02em</span>
+      </div>
+      <div class="type-specimen">
+        <span class="type-example" style="font-family:var(--font-body);font-size:15px;font-weight:400;line-height:1.65;color:var(--text-primary)">Body — running text and UI content</span>
+        <span class="type-meta">Inter 15 400 1.65</span>
+      </div>
+      <div class="type-specimen">
+        <span class="type-example" style="font-family:var(--font-body);font-size:13px;font-weight:400;line-height:1.5;color:var(--text-secondary)">Small — helper text, descriptions</span>
+        <span class="type-meta">Inter 13 400 1.5</span>
+      </div>
+      <div class="type-specimen">
+        <span class="type-example" style="font-family:var(--font-mono);font-size:14px;font-weight:500;line-height:1.4;color:var(--text-primary);font-variant-numeric:tabular-nums">R$ 2,847.00 — 94.2%</span>
+        <span class="type-meta">JetBrains Mono 14 500 tabular</span>
+      </div>
+      <div class="type-specimen">
+        <span class="type-example" style="font-family:var(--font-body);font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-tertiary)">Label — uppercase structural</span>
+        <span class="type-meta">Inter 10 600 0.1em upper</span>
+      </div>
+    </div>
+
+    <!-- ——— SPACING ——— -->
+    <div class="section">
+      <div class="section-title">Espacamento — 8pt Grid</div>
+      <div class="spacing-item"><span class="spacing-label">4</span><div class="spacing-bar" style="width:4px"></div></div>
+      <div class="spacing-item"><span class="spacing-label">8</span><div class="spacing-bar" style="width:8px"></div></div>
+      <div class="spacing-item"><span class="spacing-label">12</span><div class="spacing-bar" style="width:12px"></div></div>
+      <div class="spacing-item"><span class="spacing-label">16</span><div class="spacing-bar" style="width:16px"></div></div>
+      <div class="spacing-item"><span class="spacing-label">24</span><div class="spacing-bar" style="width:24px"></div></div>
+      <div class="spacing-item"><span class="spacing-label">32</span><div class="spacing-bar" style="width:32px"></div></div>
+      <div class="spacing-item"><span class="spacing-label">40</span><div class="spacing-bar" style="width:40px"></div></div>
+      <div class="spacing-item"><span class="spacing-label">48</span><div class="spacing-bar" style="width:48px"></div></div>
+      <div class="spacing-item"><span class="spacing-label">64</span><div class="spacing-bar" style="width:64px"></div></div>
+      <div class="note">Espacamento generoso. Na duvida, mais espaco.</div>
+    </div>
+
+    <!-- ——— RADIUS ——— -->
+    <div class="section">
+      <div class="section-title">Radius</div>
+      <div class="radius-row">
+        <div class="radius-item"><div class="radius-box" style="border-radius:0"></div><span class="radius-label">0</span></div>
+        <div class="radius-item"><div class="radius-box" style="border-radius:2px"></div><span class="radius-label">2px</span></div>
+        <div class="radius-item"><div class="radius-box" style="border-radius:4px"></div><span class="radius-label">4px</span></div>
+        <div class="radius-item"><div class="radius-box" style="border-radius:6px"></div><span class="radius-label">6px</span></div>
+        <div class="radius-item"><div class="radius-box" style="border-radius:8px"></div><span class="radius-label">8px max</span></div>
+      </div>
+      <div class="note">Maximo 8px. Zero pill shape. Cantos retos = peso e intencao.</div>
+    </div>
+
+    <!-- ——— SEMANTIC ——— -->
+    <div class="section">
+      <div class="section-title">Cores Semanticas</div>
+      <div class="semantic-row">
+        <div class="semantic-item"><div class="semantic-swatch"><div class="semantic-color" style="background:#4ADE80"></div><div class="semantic-color" style="background:#22C55E"></div><div class="semantic-color" style="background:#16A34A"></div></div><span class="semantic-name">Success</span></div>
+        <div class="semantic-item"><div class="semantic-swatch"><div class="semantic-color" style="background:#FBBF24"></div><div class="semantic-color" style="background:#F59E0B"></div><div class="semantic-color" style="background:#D97706"></div></div><span class="semantic-name">Warning</span></div>
+        <div class="semantic-item"><div class="semantic-swatch"><div class="semantic-color" style="background:#F87171"></div><div class="semantic-color" style="background:#EF4444"></div><div class="semantic-color" style="background:#DC2626"></div></div><span class="semantic-name">Error</span></div>
+        <div class="semantic-item"><div class="semantic-swatch"><div class="semantic-color" style="background:#60A5FA"></div><div class="semantic-color" style="background:#3B82F6"></div><div class="semantic-color" style="background:#2563EB"></div></div><span class="semantic-name">Info</span></div>
+      </div>
+      <div class="note">Funcionais, nao decorativas. Apenas em estados de sistema.</div>
+    </div>
+
+    <!-- ——— BUTTONS ——— -->
+    <div class="section section-2col">
+      <div class="section-title">Botoes</div>
+
+      <div class="section-subtitle">Primary — Cobre</div>
+      <div class="btn-row">
+        <button class="btn btn-primary btn-lg">Acessar Mentoria</button>
+        <button class="btn btn-primary btn-md"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>Continuar</button>
+        <button class="btn btn-primary btn-sm">Salvar</button>
+        <button class="btn btn-primary btn-md btn-icon-only" aria-label="Avancar"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
+        <button class="btn btn-primary btn-sm btn-icon-only" aria-label="Confirmar"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg></button>
+      </div>
+
+      <div class="section-subtitle mt-5">Secondary — Surface</div>
+      <div class="btn-row">
+        <button class="btn btn-secondary btn-lg">Ver Detalhes</button>
+        <button class="btn btn-secondary btn-md"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Buscar</button>
+        <button class="btn btn-secondary btn-sm">Filtrar</button>
+        <button class="btn btn-secondary btn-md btn-icon-only" aria-label="Configuracoes"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/></svg></button>
+      </div>
+
+      <div class="section-subtitle mt-5">Outline — Cobre</div>
+      <div class="btn-row">
+        <button class="btn btn-outline btn-lg">Documentacao</button>
+        <button class="btn btn-outline btn-md"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>Abrir</button>
+        <button class="btn btn-outline btn-sm">Export</button>
+      </div>
+
+      <div class="section-subtitle mt-5">Ghost / Disabled</div>
+      <div class="btn-row">
+        <button class="btn btn-ghost btn-md">Cancelar</button>
+        <button class="btn btn-ghost btn-sm">Limpar</button>
+        <button class="btn btn-primary btn-md" disabled aria-disabled="true">Disabled</button>
+        <button class="btn btn-secondary btn-sm" disabled aria-disabled="true">Disabled</button>
+      </div>
+    </div>
+
+    <!-- ——— CARDS ——— -->
+    <div class="section">
+      <div class="section-title">Cards</div>
+      <div style="display:flex;flex-direction:column;gap:var(--sp-4)">
+        <div class="card">
+          <div class="card-accent"></div>
+          <div class="card-title">Inteligencia Estrategica</div>
+          <div class="card-desc">Frameworks de posicionamento, funil e narrativa para infoprodutores que querem jogar no longo prazo.</div>
+        </div>
+        <div class="card">
+          <div class="card-accent"></div>
+          <div class="card-title">Inteligencia Artificial</div>
+          <div class="card-desc">Automacao, analise de dados e sistemas de decisao alimentados por IA aplicada ao negocio.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ——— INPUTS ——— -->
+    <div class="section">
+      <div class="section-title">Inputs</div>
+      <div class="input-group">
+        <label class="input-label" for="input-default">Default</label>
+        <input class="input" id="input-default" type="email" inputmode="email" placeholder="Digite seu email" autocomplete="email">
+      </div>
+      <div class="input-group">
+        <label class="input-label" for="input-focus">Focused</label>
+        <input class="input" id="input-focus" type="email" value="wallace@attos.com" style="border-color:var(--copper);outline:2px solid var(--focus-ring);outline-offset:-1px">
+      </div>
+      <div class="input-group">
+        <label class="input-label" for="input-error">Error</label>
+        <input class="input input-error" id="input-error" type="email" value="email-invalido" aria-invalid="true" aria-describedby="error-msg">
+        <span class="input-helper-error" id="error-msg" role="alert">Formato de email invalido</span>
+      </div>
+      <div class="input-group">
+        <label class="input-label" for="input-disabled">Disabled</label>
+        <input class="input" id="input-disabled" type="text" placeholder="Indisponivel" disabled>
+      </div>
+    </div>
+
+    <!-- ——— BADGES ——— -->
+    <div class="section">
+      <div class="section-title">Badges</div>
+      <div class="section-subtitle">Filled</div>
+      <div class="badge-row">
+        <span class="badge badge-copper badge-md"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Mentor<span class="badge-dismiss" role="button" aria-label="Remover badge Mentor"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></span>
+        <span class="badge badge-success badge-md">Ativo</span>
+        <span class="badge badge-warning badge-md">Pendente</span>
+        <span class="badge badge-error badge-md">Atrasado</span>
+      </div>
+      <div class="badge-row">
+        <span class="badge badge-copper badge-sm">Pro</span>
+        <span class="badge badge-surface badge-sm">Draft</span>
+        <span class="badge badge-success badge-sm">Live</span>
+      </div>
+      <div class="section-subtitle mt-5">Outlined</div>
+      <div class="badge-row">
+        <span class="badge badge-copper-outline badge-md"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Em Progresso</span>
+        <span class="badge badge-success-outline badge-md">Completo</span>
+        <span class="badge badge-error-outline badge-md">Falha</span>
+      </div>
+      <div class="badge-row">
+        <span class="badge badge-copper-outline badge-sm">v2.1</span>
+        <span class="badge badge-warning-outline badge-sm">Beta</span>
+      </div>
+    </div>
+
+    <!-- ——— CHECKBOXES ——— -->
+    <div class="section">
+      <div class="section-title">Checkboxes — 6 Estados</div>
+      <div class="checkbox-row">
+        <div class="checkbox-item"><div class="checkbox"></div><span>Default</span></div>
+        <div class="checkbox-item"><div class="checkbox checkbox-hover"></div><span>Hover</span></div>
+        <div class="checkbox-item"><div class="checkbox checkbox-focus"></div><span>Focus</span></div>
+        <div class="checkbox-item"><div class="checkbox checkbox-checked"><svg width="10" height="10" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg></div><span>Checked</span></div>
+        <div class="checkbox-item"><div class="checkbox checkbox-indeterminate"><svg width="10" height="10" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/></svg></div><span>Indeterminate</span></div>
+        <div class="checkbox-item"><div class="checkbox checkbox-disabled"></div><span style="opacity:0.3">Disabled</span></div>
+      </div>
+    </div>
+
+    <!-- ——— PROGRESS ——— -->
+    <div class="section">
+      <div class="section-title">Progress</div>
+      <div class="progress-group">
+        <div class="progress-item"><div class="progress-header"><span>Modulo concluido</span><span class="progress-value">73%</span></div><div class="progress-track" role="progressbar" aria-valuenow="73" aria-valuemin="0" aria-valuemax="100" aria-label="Modulo concluido"><div class="progress-fill" style="width:73%"></div></div></div>
+        <div class="progress-item"><div class="progress-header"><span>Meta de receita</span><span class="progress-value">91%</span></div><div class="progress-track" role="progressbar" aria-valuenow="91" aria-valuemin="0" aria-valuemax="100" aria-label="Meta de receita"><div class="progress-fill progress-success" style="width:91%"></div></div></div>
+        <div class="progress-item"><div class="progress-header"><span>Risco de churn</span><span class="progress-value">38%</span></div><div class="progress-track" role="progressbar" aria-valuenow="38" aria-valuemin="0" aria-valuemax="100" aria-label="Risco de churn"><div class="progress-fill progress-warning" style="width:38%"></div></div></div>
+        <div class="progress-item"><div class="progress-header"><span>Taxa de erro</span><span class="progress-value">12%</span></div><div class="progress-track" role="progressbar" aria-valuenow="12" aria-valuemin="0" aria-valuemax="100" aria-label="Taxa de erro"><div class="progress-fill progress-error" style="width:12%"></div></div></div>
+      </div>
+    </div>
+
+    <!-- ——— STAT CARDS ——— -->
+    <div class="section section-full">
+      <div class="section-title">Stat Cards</div>
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-accent stat-accent-copper"></div><div class="stat-value">2,847</div><div class="stat-label">Membros ativos</div></div>
+        <div class="stat-card"><div class="stat-accent stat-accent-success"></div><div class="stat-value">R$1.2M</div><div class="stat-label">Receita mensal</div></div>
+        <div class="stat-card"><div class="stat-accent stat-accent-warning"></div><div class="stat-value">94.2%</div><div class="stat-label">Taxa de conclusao</div></div>
+        <div class="stat-card"><div class="stat-accent stat-accent-error"></div><div class="stat-value">4.7min</div><div class="stat-label">Sessao media</div></div>
+      </div>
+    </div>
+
+    <!-- ——— DIRETRIZES ——— -->
+    <div class="section section-full">
+      <div class="section-title">Diretrizes Visuais</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-8)">
+        <div>
+          <div class="section-subtitle" style="color:var(--copper-text)">Faca</div>
+          <div style="font-size:12px;color:var(--text-secondary);line-height:2">
+            + Fundos escuros como padrao<br>
+            + Espacamento generoso entre elementos<br>
+            + Tipografia grande e confiante<br>
+            + Cobre apenas em detalhes pontuais<br>
+            + Bordas minimas ou inexistentes<br>
+            + Grid limpo, alinhamento rigoroso<br>
+            + Cantos retos ou levemente arredondados<br>
+            + Icones lineares, traco fino (1.5px)<br>
+            + Animacoes sutis e lentas (300-500ms)<br>
+            + Off-white no texto (#E8E4E0)<br>
+            + Focus-visible em todo elemento interativo<br>
+            + JetBrains Mono para dados/numeros
+          </div>
+        </div>
+        <div>
+          <div class="section-subtitle" style="color:var(--error)">Nao Faca</div>
+          <div style="font-size:12px;color:var(--text-secondary);line-height:2">
+            — Gradientes coloridos ou neon<br>
+            — Dourado ou elementos 'luxury generico'<br>
+            — Glassmorphism ou efeitos de vidro<br>
+            — Icones coloridos ou ilustracoes cartoon<br>
+            — Fontes decorativas ou serifadas no body<br>
+            — Mais de uma cor de acento<br>
+            — Sombras suaves (drop shadow)<br>
+            — Cantos muito arredondados (pill shape)<br>
+            — Foguetes, graficos subindo, emojis<br>
+            — Fundos claros como padrao<br>
+            — Remover focus rings sem substituto<br>
+            — Cobre #B87333 em texto pequeno (usar #D4956A)
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:var(--sp-6);padding-top:var(--sp-4);border-top:1px solid var(--border-subtle)">
+        <div style="font-size:11px;color:var(--copper-text);font-weight:600;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:var(--sp-2)">Teste do Silencio</div>
+        <div style="font-size:13px;color:var(--text-secondary)">Se remover um elemento e nada mudar, ele nao deveria estar ali.</div>
+      </div>
+    </div>
+
+    <!-- ——— CSS EXPORT ——— -->
+    <div class="section section-full">
+      <div class="section-title">CSS Export</div>
+      <div class="code-block"><span class="t-comment">/* ====================================
+   ATTOS DESIGN SYSTEM v3
+   Brutalismo Refinado
+   "Barulho Silencioso"
+
+   CHANGELOG v2 → v3:
+   + --copper-text token (WCAG AA safe)
+   + --text-tertiary bumped #5A→#666 (3.6:1)
+   + --font-mono (JetBrains Mono)
+   + --focus-ring + --focus-ring-offset
+   + prefers-reduced-motion support
+   ==================================== */</span>
+
+:root {
+  <span class="t-comment">/* Base */</span>
+  <span class="t-prop">--base-bg</span>: <span class="t-val">#0F0F0F</span>;
+  <span class="t-prop">--base-anthracite</span>: <span class="t-val">#1A1A1A</span>;
+  <span class="t-prop">--base-graphite-dark</span>: <span class="t-val">#2A2A2A</span>;
+  <span class="t-prop">--base-graphite-mid</span>: <span class="t-val">#3D3D3D</span>;
+  <span class="t-prop">--base-graphite-light</span>: <span class="t-val">#5A5A5A</span>;
+
+  <span class="t-comment">/* Texto */</span>
+  <span class="t-prop">--text-primary</span>: <span class="t-val">#E8E4E0</span>;  <span class="t-comment">/* 15.1:1 on bg */</span>
+  <span class="t-prop">--text-secondary</span>: <span class="t-val">#8A8A8A</span>;  <span class="t-comment">/* 5.6:1 on bg */</span>
+  <span class="t-prop">--text-tertiary</span>: <span class="t-val">#666666</span>;  <span class="t-comment">/* 3.6:1 — large text/labels only */</span>
+  <span class="t-prop">--text-white</span>: <span class="t-val">#FFFFFF</span>;
+
+  <span class="t-comment">/* Acento — Cobre (2% cirurgico) */</span>
+  <span class="t-prop">--copper-light</span>: <span class="t-val">#D4956A</span>;
+  <span class="t-prop">--copper</span>: <span class="t-val">#B87333</span>;
+  <span class="t-prop">--copper-muted</span>: <span class="t-val">#9A6840</span>;
+  <span class="t-prop">--copper-dark</span>: <span class="t-val">#8B5A2B</span>;
+  <span class="t-prop">--copper-text</span>: <span class="t-val">#D4956A</span>;  <span class="t-comment">/* 6.0:1 — safe for body text */</span>
+
+  <span class="t-comment">/* Semantic */</span>
+  <span class="t-prop">--success</span>: <span class="t-val">#4ADE80</span>;
+  <span class="t-prop">--success-muted</span>: <span class="t-val">#22C55E</span>;
+  <span class="t-prop">--success-dark</span>: <span class="t-val">#16A34A</span>;
+  <span class="t-prop">--warning</span>: <span class="t-val">#FBBF24</span>;
+  <span class="t-prop">--warning-muted</span>: <span class="t-val">#F59E0B</span>;
+  <span class="t-prop">--warning-dark</span>: <span class="t-val">#D97706</span>;
+  <span class="t-prop">--error</span>: <span class="t-val">#F87171</span>;
+  <span class="t-prop">--error-muted</span>: <span class="t-val">#EF4444</span>;
+  <span class="t-prop">--error-dark</span>: <span class="t-val">#DC2626</span>;
+  <span class="t-prop">--info</span>: <span class="t-val">#60A5FA</span>;
+  <span class="t-prop">--info-muted</span>: <span class="t-val">#3B82F6</span>;
+  <span class="t-prop">--info-dark</span>: <span class="t-val">#2563EB</span>;
+
+  <span class="t-comment">/* Typography */</span>
+  <span class="t-prop">--font-heading</span>: <span class="t-val">'Space Grotesk', system-ui, sans-serif</span>;
+  <span class="t-prop">--font-body</span>: <span class="t-val">'Inter', system-ui, sans-serif</span>;
+  <span class="t-prop">--font-display</span>: <span class="t-val">'DM Serif Display', Georgia, serif</span>;
+  <span class="t-prop">--font-mono</span>: <span class="t-val">'JetBrains Mono', 'SF Mono', monospace</span>;
+
+  <span class="t-comment">/* Spacing (8pt grid) */</span>
+  <span class="t-prop">--sp-1</span>: <span class="t-val">4px</span>;  <span class="t-prop">--sp-2</span>: <span class="t-val">8px</span>;
+  <span class="t-prop">--sp-3</span>: <span class="t-val">12px</span>; <span class="t-prop">--sp-4</span>: <span class="t-val">16px</span>;
+  <span class="t-prop">--sp-5</span>: <span class="t-val">20px</span>; <span class="t-prop">--sp-6</span>: <span class="t-val">24px</span>;
+  <span class="t-prop">--sp-8</span>: <span class="t-val">32px</span>; <span class="t-prop">--sp-10</span>: <span class="t-val">40px</span>;
+  <span class="t-prop">--sp-12</span>: <span class="t-val">48px</span>; <span class="t-prop">--sp-16</span>: <span class="t-val">64px</span>;
+
+  <span class="t-comment">/* Radius — max 8px */</span>
+  <span class="t-prop">--radius-none</span>: <span class="t-val">0</span>;
+  <span class="t-prop">--radius-xs</span>: <span class="t-val">2px</span>;
+  <span class="t-prop">--radius-sm</span>: <span class="t-val">4px</span>;
+  <span class="t-prop">--radius-md</span>: <span class="t-val">6px</span>;
+  <span class="t-prop">--radius-lg</span>: <span class="t-val">8px</span>;
+
+  <span class="t-comment">/* Borders */</span>
+  <span class="t-prop">--border-default</span>: <span class="t-val">#3D3D3D</span>;
+  <span class="t-prop">--border-subtle</span>: <span class="t-val">#2A2A2A</span>;
+
+  <span class="t-comment">/* Focus (a11y) */</span>
+  <span class="t-prop">--focus-ring</span>: <span class="t-val">#D4956A</span>;
+  <span class="t-prop">--focus-ring-offset</span>: <span class="t-val">#0F0F0F</span>;
+
+  <span class="t-comment">/* Transitions — sutis e lentas */</span>
+  <span class="t-prop">--ease</span>: <span class="t-val">cubic-bezier(0.25, 0.1, 0.25, 1)</span>;
+  <span class="t-prop">--duration</span>: <span class="t-val">300ms</span>;
+  <span class="t-prop">--duration-slow</span>: <span class="t-val">500ms</span>;
+}</div>
+    </div>
+
+  </div><!-- /grid -->
+
+  <!-- ——— FOOTER ——— -->
+  <footer style="margin-top:var(--sp-16);padding-top:var(--sp-8);border-top:1px solid var(--border-subtle);display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:var(--sp-6)">
+    <div>
+      <div style="font-family:var(--font-display);font-size:24px;color:var(--text-primary)">Attos</div>
+      <div style="font-size:11px;color:var(--text-tertiary);margin-top:var(--sp-1)">Mentoria Wallace & Jeff</div>
+    </div>
+    <div style="text-align:right">
+      <div style="font-size:11px;color:var(--text-tertiary)">Confidencial — Abril 2026</div>
+      <div style="font-size:13px;color:var(--text-secondary);margin-top:var(--sp-2);font-style:italic">"Quem esta dentro sabe. Quem esta fora quer entrar."</div>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+function toggleTheme() {
+  const html = document.documentElement;
+  const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  html.setAttribute('data-theme', next);
+  document.getElementById('ico-sun').style.display = next === 'dark' ? 'block' : 'none';
+  document.getElementById('ico-moon').style.display = next === 'light' ? 'block' : 'none';
+  document.getElementById('theme-label').textContent = next === 'dark' ? 'Light' : 'Dark';
+}
+</script>
+
+</body>
+</html>

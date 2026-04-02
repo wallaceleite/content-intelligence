@@ -1,0 +1,1414 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Attos — Design System v2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<style>
+/* ============================================
+   ATTOS DESIGN SYSTEM v2
+   Brutalismo Refinado
+   "Barulho Silencioso"
+   ============================================ */
+
+:root {
+  /* — Base (Fundacao) — */
+  --base-bg: #0F0F0F;
+  --base-anthracite: #1A1A1A;
+  --base-graphite-dark: #2A2A2A;
+  --base-graphite-mid: #3D3D3D;
+  --base-graphite-light: #5A5A5A;
+
+  /* — Texto — */
+  --text-primary: #E8E4E0;
+  --text-secondary: #8A8A8A;
+  --text-tertiary: #5A5A5A;
+  --text-white: #FFFFFF;
+
+  /* — Acento: Cobre (uso cirurgico — 2%) — */
+  --copper-light: #D4956A;
+  --copper: #B87333;
+  --copper-muted: #9A6840;
+  --copper-dark: #8B5A2B;
+
+  /* — Semantic — */
+  --success: #4ADE80;
+  --success-muted: #22C55E;
+  --success-dark: #16A34A;
+  --warning: #FBBF24;
+  --warning-muted: #F59E0B;
+  --warning-dark: #D97706;
+  --error: #F87171;
+  --error-muted: #EF4444;
+  --error-dark: #DC2626;
+  --info: #60A5FA;
+  --info-muted: #3B82F6;
+  --info-dark: #2563EB;
+
+  /* — Typography — */
+  --font-heading: 'Space Grotesk', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --font-display: 'DM Serif Display', Georgia, serif;
+
+  /* — Spacing (8pt grid) — */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+  --sp-8: 32px;
+  --sp-10: 40px;
+  --sp-12: 48px;
+  --sp-14: 56px;
+  --sp-16: 64px;
+
+  /* — Radius (reto ou levemente arredondado) — */
+  --radius-none: 0;
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+
+  /* — Borders — */
+  --border-default: #3D3D3D;
+  --border-subtle: #2A2A2A;
+  --border-copper: #B87333;
+
+  /* — Transitions — */
+  --ease: cubic-bezier(0.25, 0.1, 0.25, 1);
+  --duration: 300ms;
+  --duration-slow: 500ms;
+}
+
+/* ============================================
+   LIGHT THEME (secondary — dark is default)
+   ============================================ */
+[data-theme="light"] {
+  --base-bg: #F5F2EF;
+  --base-anthracite: #EBE7E3;
+  --base-graphite-dark: #DDD9D5;
+  --base-graphite-mid: #C5C0BA;
+  --base-graphite-light: #9A9590;
+  --text-primary: #0F0F0F;
+  --text-secondary: #5A5A5A;
+  --text-tertiary: #8A8A8A;
+  --text-white: #0F0F0F;
+  --border-default: #C5C0BA;
+  --border-subtle: #DDD9D5;
+  --border-copper: #B87333;
+  --copper: #9A6840;
+  --copper-light: #B87333;
+}
+
+/* ============================================
+   BASE
+   ============================================ */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: var(--font-body);
+  background: var(--base-bg);
+  color: var(--text-primary);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.showcase {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: var(--sp-12) var(--sp-8);
+}
+
+/* — Header — */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: var(--sp-16);
+  padding-bottom: var(--sp-8);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.brand {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.brand-wordmark {
+  font-family: var(--font-display);
+  font-size: 42px;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+.brand-sub {
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-6);
+}
+
+.header-tag {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--copper);
+}
+
+.theme-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  background: transparent;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  padding: var(--sp-2) var(--sp-3);
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 500;
+  font-family: var(--font-body);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  transition: border-color var(--duration) var(--ease);
+}
+
+.theme-toggle:hover { border-color: var(--copper); color: var(--text-primary); }
+.theme-toggle svg { width: 14px; height: 14px; }
+
+/* — Grid — */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--sp-6);
+}
+
+@media (max-width: 1024px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 640px) { .grid, .grid-2col { grid-template-columns: 1fr; } }
+
+/* — Section — */
+.section {
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: var(--sp-6);
+  background: var(--base-anthracite);
+}
+
+.section-full { grid-column: 1 / -1; }
+.section-2col { grid-column: span 2; }
+
+@media (max-width: 640px) { .section-2col { grid-column: span 1; } }
+
+.section-title {
+  font-family: var(--font-heading);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--copper);
+  margin-bottom: var(--sp-6);
+  padding-bottom: var(--sp-3);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.section-subtitle {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  margin-bottom: var(--sp-3);
+}
+
+/* ============================================
+   SWATCHES
+   ============================================ */
+.swatch-group { margin-bottom: var(--sp-5); }
+.swatch-group:last-child { margin-bottom: 0; }
+
+.swatch-group-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  margin-bottom: var(--sp-3);
+}
+
+.swatch-row {
+  display: flex;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+}
+
+.swatch {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+}
+
+.swatch-color {
+  width: 52px;
+  height: 36px;
+  border-radius: var(--radius-xs);
+  border: 1px solid rgba(255,255,255,0.06);
+}
+
+.swatch-name {
+  font-size: 9px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.swatch-hex {
+  font-size: 9px;
+  color: var(--text-tertiary);
+  font-family: var(--font-body);
+}
+
+/* ============================================
+   TYPOGRAPHY
+   ============================================ */
+.type-specimen {
+  padding: var(--sp-3) 0;
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-6);
+}
+
+.type-specimen:last-child { border-bottom: none; }
+
+.type-example {
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.type-meta {
+  font-size: 10px;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ============================================
+   SPACING
+   ============================================ */
+.spacing-item {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  margin-bottom: 6px;
+}
+
+.spacing-bar {
+  height: 6px;
+  background: var(--base-graphite-mid);
+  border-left: 2px solid var(--copper);
+}
+
+.spacing-label {
+  font-size: 10px;
+  color: var(--text-tertiary);
+  font-weight: 500;
+  min-width: 40px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ============================================
+   RADIUS & SHADOWS
+   ============================================ */
+.radius-row { display: flex; gap: var(--sp-4); flex-wrap: wrap; }
+
+.radius-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.radius-box {
+  width: 48px;
+  height: 48px;
+  border: 1px solid var(--copper);
+  background: transparent;
+}
+
+.radius-label {
+  font-size: 9px;
+  color: var(--text-tertiary);
+  font-weight: 500;
+}
+
+/* ============================================
+   BUTTONS
+   Cantos retos ou levemente arredondados.
+   Zero pill shape. Sem sombras suaves.
+   ============================================ */
+.btn-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+  margin-bottom: var(--sp-4);
+}
+
+.btn-row:last-child { margin-bottom: 0; }
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  font-family: var(--font-heading);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  border-radius: var(--radius-sm);
+  border: none;
+  cursor: pointer;
+  transition: all var(--duration) var(--ease);
+  white-space: nowrap;
+  text-decoration: none;
+  text-transform: none;
+}
+
+.btn svg { width: 16px; height: 16px; flex-shrink: 0; stroke-width: 1.5; }
+
+/* Sizes */
+.btn-sm { font-size: 12px; padding: 8px 16px; height: 32px; }
+.btn-sm svg { width: 14px; height: 14px; }
+.btn-md { font-size: 13px; padding: 10px 20px; height: 40px; }
+.btn-lg { font-size: 14px; padding: 14px 28px; height: 48px; }
+
+.btn-icon-only { padding: 0; }
+.btn-icon-only.btn-sm { width: 32px; }
+.btn-icon-only.btn-md { width: 40px; }
+.btn-icon-only.btn-lg { width: 48px; }
+
+/* Primary — Copper */
+.btn-primary {
+  background: var(--copper);
+  color: var(--base-bg);
+}
+.btn-primary:hover { background: var(--copper-light); }
+.btn-primary:active { background: var(--copper-dark); }
+
+/* Secondary — Surface */
+.btn-secondary {
+  background: var(--base-graphite-dark);
+  border: 1px solid var(--border-default);
+  color: var(--text-primary);
+}
+.btn-secondary:hover { border-color: var(--text-secondary); }
+
+/* Outline */
+.btn-outline {
+  background: transparent;
+  border: 1px solid var(--copper-muted);
+  color: var(--copper-light);
+}
+.btn-outline:hover { border-color: var(--copper); color: var(--copper); }
+
+/* Ghost */
+.btn-ghost {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-secondary);
+}
+.btn-ghost:hover { color: var(--text-primary); }
+
+/* Disabled */
+.btn:disabled, .btn-disabled { opacity: 0.25; pointer-events: none; }
+
+/* ============================================
+   CARDS
+   #1A1A1A bg, #3D3D3D border.
+   Sem sombra. Cantos retos ou 4px.
+   ============================================ */
+.card {
+  background: var(--base-anthracite);
+  border: 1px solid var(--base-graphite-mid);
+  border-radius: var(--radius-sm);
+  padding: var(--sp-6);
+  transition: border-color var(--duration-slow) var(--ease);
+}
+
+.card:hover { border-color: var(--copper-muted); }
+
+.card-icon {
+  width: 32px;
+  height: 2px;
+  background: var(--copper);
+  margin-bottom: var(--sp-5);
+}
+
+.card-title {
+  font-family: var(--font-heading);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: var(--sp-3);
+  letter-spacing: -0.01em;
+}
+
+.card-desc {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.65;
+}
+
+/* ============================================
+   INPUTS
+   ============================================ */
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-5);
+}
+
+.input-group:last-child { margin-bottom: 0; }
+
+.input-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.input {
+  background: var(--base-bg);
+  border: 1px solid var(--base-graphite-mid);
+  border-radius: var(--radius-sm);
+  padding: 10px var(--sp-4);
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--text-primary);
+  outline: none;
+  transition: border-color var(--duration) var(--ease);
+}
+
+.input::placeholder { color: var(--text-tertiary); }
+.input:focus { border-color: var(--copper); }
+
+.input-error { border-color: var(--error-muted); }
+.input-error:focus { border-color: var(--error); }
+
+.input:disabled { opacity: 0.3; cursor: not-allowed; }
+
+.input-helper {
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
+
+.input-helper-error {
+  font-size: 11px;
+  color: var(--error);
+}
+
+/* ============================================
+   BADGES
+   ============================================ */
+.badge-row {
+  display: flex;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+  margin-bottom: var(--sp-3);
+}
+
+.badge-row:last-child { margin-bottom: 0; }
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  font-family: var(--font-heading);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  border-radius: var(--radius-xs);
+  white-space: nowrap;
+}
+
+.badge svg { flex-shrink: 0; stroke-width: 1.5; }
+
+.badge-sm { font-size: 10px; padding: 2px 8px; height: 20px; }
+.badge-sm svg { width: 11px; height: 11px; }
+.badge-md { font-size: 11px; padding: 4px 12px; height: 26px; }
+.badge-md svg { width: 13px; height: 13px; }
+
+.badge-copper { background: var(--copper); color: var(--base-bg); }
+.badge-copper-outline { background: transparent; border: 1px solid var(--copper-muted); color: var(--copper-light); }
+.badge-surface { background: var(--base-graphite-dark); color: var(--text-secondary); }
+.badge-success { background: var(--success-dark); color: #fff; }
+.badge-success-outline { background: transparent; border: 1px solid var(--success-dark); color: var(--success); }
+.badge-warning { background: var(--warning-dark); color: #fff; }
+.badge-warning-outline { background: transparent; border: 1px solid var(--warning-dark); color: var(--warning); }
+.badge-error { background: var(--error-dark); color: #fff; }
+.badge-error-outline { background: transparent; border: 1px solid var(--error-dark); color: var(--error); }
+
+.badge-dismiss {
+  cursor: pointer;
+  opacity: 0.5;
+  margin-left: 2px;
+  transition: opacity var(--duration) var(--ease);
+}
+.badge-dismiss:hover { opacity: 1; }
+.badge-dismiss svg { width: 10px; height: 10px; }
+
+/* ============================================
+   CHECKBOXES
+   ============================================ */
+.checkbox-row { display: flex; gap: var(--sp-6); flex-wrap: wrap; }
+
+.checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.checkbox-item span {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.checkbox {
+  width: 16px;
+  height: 16px;
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--base-graphite-mid);
+  background: var(--base-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.checkbox-hover { border-color: var(--copper-muted); }
+.checkbox-focus { border-color: var(--copper); }
+.checkbox-checked { background: var(--copper); border-color: var(--copper); }
+.checkbox-checked svg { stroke: var(--base-bg); }
+.checkbox-indeterminate { background: var(--copper); border-color: var(--copper); }
+.checkbox-indeterminate svg { stroke: var(--base-bg); }
+.checkbox-disabled { opacity: 0.2; }
+
+/* ============================================
+   PROGRESS
+   ============================================ */
+.progress-group { display: flex; flex-direction: column; gap: var(--sp-5); }
+
+.progress-item { display: flex; flex-direction: column; gap: var(--sp-1); }
+
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.progress-track {
+  height: 4px;
+  background: var(--base-graphite-dark);
+  border-radius: 0;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 0;
+  background: var(--copper);
+  transition: width 800ms var(--ease);
+}
+
+.progress-success { background: var(--success-muted); }
+.progress-warning { background: var(--warning-muted); }
+.progress-error { background: var(--error-muted); }
+
+/* ============================================
+   STAT CARDS
+   ============================================ */
+.stat-card {
+  background: var(--base-anthracite);
+  border: 1px solid var(--base-graphite-mid);
+  border-radius: var(--radius-sm);
+  padding: var(--sp-5);
+}
+
+.stat-accent {
+  width: 24px;
+  height: 2px;
+  margin-bottom: var(--sp-4);
+}
+
+.stat-accent-copper { background: var(--copper); }
+.stat-accent-success { background: var(--success-muted); }
+.stat-accent-warning { background: var(--warning-muted); }
+.stat-accent-error { background: var(--error-muted); }
+
+.stat-value {
+  font-family: var(--font-heading);
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+.stat-label {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin-top: var(--sp-2);
+  letter-spacing: 0.02em;
+}
+
+/* ============================================
+   SEMANTIC COLORS
+   ============================================ */
+.semantic-row {
+  display: flex;
+  gap: var(--sp-6);
+  flex-wrap: wrap;
+}
+
+.semantic-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.semantic-swatch {
+  display: flex;
+  gap: 2px;
+}
+
+.semantic-color {
+  width: 36px;
+  height: 20px;
+  border-radius: var(--radius-xs);
+}
+
+.semantic-name {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-secondary);
+}
+
+/* ============================================
+   REGRA DE OURO (ratio bar)
+   ============================================ */
+.ratio-bar {
+  display: flex;
+  height: 8px;
+  border-radius: var(--radius-xs);
+  overflow: hidden;
+  margin-top: var(--sp-3);
+}
+
+.ratio-dark { background: var(--base-graphite-dark); }
+.ratio-text { background: var(--text-primary); }
+.ratio-copper { background: var(--copper); }
+
+.ratio-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: var(--sp-2);
+}
+
+.ratio-label {
+  font-size: 9px;
+  color: var(--text-tertiary);
+  font-weight: 500;
+}
+
+/* ============================================
+   CSS EXPORT
+   ============================================ */
+.code-block {
+  background: var(--base-bg);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: var(--sp-5);
+  overflow-x: auto;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 11px;
+  line-height: 1.8;
+  color: var(--text-secondary);
+  max-height: 520px;
+  overflow-y: auto;
+  tab-size: 2;
+}
+
+.code-block .t-prop { color: var(--copper-light); }
+.code-block .t-val { color: var(--text-primary); }
+.code-block .t-comment { color: var(--text-tertiary); }
+
+/* ============================================
+   UTILITIES
+   ============================================ */
+.mt-4 { margin-top: var(--sp-4); }
+.mt-5 { margin-top: var(--sp-5); }
+.mt-6 { margin-top: var(--sp-6); }
+.mb-3 { margin-bottom: var(--sp-3); }
+.mb-4 { margin-bottom: var(--sp-4); }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--base-graphite-mid); border-radius: 0; }
+</style>
+</head>
+<body>
+
+<div class="showcase">
+
+  <!-- ======== HEADER ======== -->
+  <header class="header">
+    <div class="brand">
+      <div class="brand-wordmark">Attos</div>
+      <div class="brand-sub">Design System</div>
+    </div>
+    <div class="header-right">
+      <span class="header-tag">Brutalismo Refinado</span>
+      <button class="theme-toggle" onclick="toggleTheme()">
+        <svg id="ico-sun" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        <svg id="ico-moon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        <span id="theme-label">Light</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ======== GRID ======== -->
+  <div class="grid">
+
+    <!-- ——— BASE COLORS ——— -->
+    <div class="section">
+      <div class="section-title">02 — Base / Fundacao</div>
+      <div class="swatch-group">
+        <div class="swatch-row">
+          <div class="swatch">
+            <div class="swatch-color" style="background:#0F0F0F"></div>
+            <span class="swatch-name">Background</span>
+            <span class="swatch-hex">#0F0F0F</span>
+          </div>
+          <div class="swatch">
+            <div class="swatch-color" style="background:#1A1A1A"></div>
+            <span class="swatch-name">Anthracite</span>
+            <span class="swatch-hex">#1A1A1A</span>
+          </div>
+          <div class="swatch">
+            <div class="swatch-color" style="background:#2A2A2A"></div>
+            <span class="swatch-name">Graphite Dark</span>
+            <span class="swatch-hex">#2A2A2A</span>
+          </div>
+          <div class="swatch">
+            <div class="swatch-color" style="background:#3D3D3D"></div>
+            <span class="swatch-name">Graphite Mid</span>
+            <span class="swatch-hex">#3D3D3D</span>
+          </div>
+          <div class="swatch">
+            <div class="swatch-color" style="background:#5A5A5A"></div>
+            <span class="swatch-name">Graphite Light</span>
+            <span class="swatch-hex">#5A5A5A</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ——— TEXT COLORS ——— -->
+    <div class="section">
+      <div class="section-title">02 — Texto</div>
+      <div class="swatch-row">
+        <div class="swatch">
+          <div class="swatch-color" style="background:#E8E4E0"></div>
+          <span class="swatch-name">Primary</span>
+          <span class="swatch-hex">#E8E4E0</span>
+        </div>
+        <div class="swatch">
+          <div class="swatch-color" style="background:#8A8A8A"></div>
+          <span class="swatch-name">Secondary</span>
+          <span class="swatch-hex">#8A8A8A</span>
+        </div>
+        <div class="swatch">
+          <div class="swatch-color" style="background:#5A5A5A"></div>
+          <span class="swatch-name">Tertiary</span>
+          <span class="swatch-hex">#5A5A5A</span>
+        </div>
+        <div class="swatch">
+          <div class="swatch-color" style="background:#FFFFFF; border-color: rgba(255,255,255,0.15)"></div>
+          <span class="swatch-name">Pure White</span>
+          <span class="swatch-hex">#FFFFFF</span>
+        </div>
+      </div>
+      <div style="font-size:10px;color:var(--text-tertiary);margin-top:var(--sp-4);line-height:1.6">Off-white (#E8E4E0) como padrao. Branco puro apenas em headings de impacto.</div>
+    </div>
+
+    <!-- ——— COPPER ACCENT ——— -->
+    <div class="section">
+      <div class="section-title">02 — Acento / Cobre</div>
+      <div class="swatch-row">
+        <div class="swatch">
+          <div class="swatch-color" style="background:#D4956A"></div>
+          <span class="swatch-name">Light</span>
+          <span class="swatch-hex">#D4956A</span>
+        </div>
+        <div class="swatch">
+          <div class="swatch-color" style="background:#B87333; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.1)"></div>
+          <span class="swatch-name" style="color:var(--copper-light);font-weight:600">Primary</span>
+          <span class="swatch-hex">#B87333</span>
+        </div>
+        <div class="swatch">
+          <div class="swatch-color" style="background:#9A6840"></div>
+          <span class="swatch-name">Muted</span>
+          <span class="swatch-hex">#9A6840</span>
+        </div>
+        <div class="swatch">
+          <div class="swatch-color" style="background:#8B5A2B"></div>
+          <span class="swatch-name">Dark</span>
+          <span class="swatch-hex">#8B5A2B</span>
+        </div>
+      </div>
+      <!-- Regra de Ouro -->
+      <div class="mt-5">
+        <div class="section-subtitle">Regra de Ouro</div>
+        <div class="ratio-bar">
+          <div class="ratio-dark" style="width:90%"></div>
+          <div class="ratio-text" style="width:8%"></div>
+          <div class="ratio-copper" style="width:2%"></div>
+        </div>
+        <div class="ratio-labels">
+          <span class="ratio-label">90% escuros</span>
+          <span class="ratio-label">8% texto</span>
+          <span class="ratio-label">2% cobre</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ——— TYPOGRAPHY ——— -->
+    <div class="section section-2col">
+      <div class="section-title">03 — Tipografia</div>
+      <div class="type-specimen">
+        <span class="type-example" style="font-family:var(--font-display);font-size:48px;font-weight:400;letter-spacing:0.01em;line-height:1.1">Display</span>
+        <span class="type-meta">DM Serif Display / 48px / 400 — wordmark only</span>
+      </div>
+      <div class="type-specimen">
+        <span class="type-example" style="font-family:var(--font-heading);font-size:42px;font-weight:700;letter-spacing:-0.03em;line-height:1.1">Heading 1</span>
+        <span class="type-meta">Space Grotesk / 42px / 700 / -0.03em</span>
+      </div>
+      <div class="type-specimen">
+        <span class="type-example" style="font-family:var(--font-heading);font-size:32px;font-weight:700;letter-spacing:-0.02em;line-height:1.2">Heading 2</span>
+        <span class="type-meta">Space Grotesk / 32px / 700 / -0.02em</span>
+      </div>
+      <div class="type-specimen">
+        <span class="type-example" style="font-family:var(--font-heading);font-size:24px;font-weight:600;letter-spacing:-0.01em;line-height:1.3">Heading 3</span>
+        <span class="type-meta">Space Grotesk / 24px / 600 / -0.01em</span>
+      </div>
+      <div class="type-specimen">
+        <span class="type-example" style="font-family:var(--font-heading);font-size:20px;font-weight:600;line-height:1.35">Heading 4</span>
+        <span class="type-meta">Space Grotesk / 20px / 600 / 0</span>
+      </div>
+      <div class="type-specimen">
+        <span class="type-example" style="font-family:var(--font-heading);font-size:17px;font-weight:600;line-height:1.4">Heading 5</span>
+        <span class="type-meta">Space Grotesk / 17px / 600 / 0</span>
+      </div>
+      <div class="type-specimen">
+        <span class="type-example" style="font-family:var(--font-heading);font-size:14px;font-weight:600;letter-spacing:0.02em;line-height:1.4">Heading 6</span>
+        <span class="type-meta">Space Grotesk / 14px / 600 / 0.02em</span>
+      </div>
+      <div class="type-specimen">
+        <span class="type-example" style="font-family:var(--font-body);font-size:15px;font-weight:400;line-height:1.65;color:var(--text-primary)">Body — running text and UI content. Off-white, never pure white.</span>
+        <span class="type-meta">Inter / 15px / 400 / 1.65</span>
+      </div>
+      <div class="type-specimen">
+        <span class="type-example" style="font-family:var(--font-body);font-size:13px;font-weight:400;line-height:1.5;color:var(--text-secondary)">Small — helper text, descriptions, secondary info</span>
+        <span class="type-meta">Inter / 13px / 400 / 1.5</span>
+      </div>
+      <div class="type-specimen">
+        <span class="type-example" style="font-family:var(--font-body);font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-tertiary)">Label — uppercase, sparse, structural</span>
+        <span class="type-meta">Inter / 10px / 600 / 0.1em / uppercase</span>
+      </div>
+    </div>
+
+    <!-- ——— SPACING ——— -->
+    <div class="section">
+      <div class="section-title">04 — Espacamento — 8pt Grid</div>
+      <div class="spacing-item"><span class="spacing-label">4</span><div class="spacing-bar" style="width:4px"></div></div>
+      <div class="spacing-item"><span class="spacing-label">8</span><div class="spacing-bar" style="width:8px"></div></div>
+      <div class="spacing-item"><span class="spacing-label">12</span><div class="spacing-bar" style="width:12px"></div></div>
+      <div class="spacing-item"><span class="spacing-label">16</span><div class="spacing-bar" style="width:16px"></div></div>
+      <div class="spacing-item"><span class="spacing-label">24</span><div class="spacing-bar" style="width:24px"></div></div>
+      <div class="spacing-item"><span class="spacing-label">32</span><div class="spacing-bar" style="width:32px"></div></div>
+      <div class="spacing-item"><span class="spacing-label">40</span><div class="spacing-bar" style="width:40px"></div></div>
+      <div class="spacing-item"><span class="spacing-label">48</span><div class="spacing-bar" style="width:48px"></div></div>
+      <div class="spacing-item"><span class="spacing-label">64</span><div class="spacing-bar" style="width:64px"></div></div>
+      <div style="font-size:10px;color:var(--text-tertiary);margin-top:var(--sp-4)">Espacamento generoso. Na duvida, mais espaco.</div>
+    </div>
+
+    <!-- ——— RADIUS ——— -->
+    <div class="section">
+      <div class="section-title">04 — Radius</div>
+      <div class="radius-row">
+        <div class="radius-item">
+          <div class="radius-box" style="border-radius:0"></div>
+          <span class="radius-label">0 — none</span>
+        </div>
+        <div class="radius-item">
+          <div class="radius-box" style="border-radius:2px"></div>
+          <span class="radius-label">2px — xs</span>
+        </div>
+        <div class="radius-item">
+          <div class="radius-box" style="border-radius:4px"></div>
+          <span class="radius-label">4px — sm</span>
+        </div>
+        <div class="radius-item">
+          <div class="radius-box" style="border-radius:6px"></div>
+          <span class="radius-label">6px — md</span>
+        </div>
+        <div class="radius-item">
+          <div class="radius-box" style="border-radius:8px"></div>
+          <span class="radius-label">8px — lg (max)</span>
+        </div>
+      </div>
+      <div style="font-size:10px;color:var(--text-tertiary);margin-top:var(--sp-5)">Maximo 8px. Zero pill shape. Cantos retos comunicam peso e intencao.</div>
+    </div>
+
+    <!-- ——— SEMANTIC ——— -->
+    <div class="section">
+      <div class="section-title">02 — Cores Semanticas</div>
+      <div class="semantic-row">
+        <div class="semantic-item">
+          <div class="semantic-swatch">
+            <div class="semantic-color" style="background:#4ADE80"></div>
+            <div class="semantic-color" style="background:#22C55E"></div>
+            <div class="semantic-color" style="background:#16A34A"></div>
+          </div>
+          <span class="semantic-name">Success</span>
+        </div>
+        <div class="semantic-item">
+          <div class="semantic-swatch">
+            <div class="semantic-color" style="background:#FBBF24"></div>
+            <div class="semantic-color" style="background:#F59E0B"></div>
+            <div class="semantic-color" style="background:#D97706"></div>
+          </div>
+          <span class="semantic-name">Warning</span>
+        </div>
+        <div class="semantic-item">
+          <div class="semantic-swatch">
+            <div class="semantic-color" style="background:#F87171"></div>
+            <div class="semantic-color" style="background:#EF4444"></div>
+            <div class="semantic-color" style="background:#DC2626"></div>
+          </div>
+          <span class="semantic-name">Error</span>
+        </div>
+        <div class="semantic-item">
+          <div class="semantic-swatch">
+            <div class="semantic-color" style="background:#60A5FA"></div>
+            <div class="semantic-color" style="background:#3B82F6"></div>
+            <div class="semantic-color" style="background:#2563EB"></div>
+          </div>
+          <span class="semantic-name">Info</span>
+        </div>
+      </div>
+      <div style="font-size:10px;color:var(--text-tertiary);margin-top:var(--sp-4);line-height:1.6">Semanticas sao funcionais, nao decorativas. Usadas apenas em estados de sistema (alertas, validacao, progresso).</div>
+    </div>
+
+    <!-- ——— BUTTONS ——— -->
+    <div class="section section-2col">
+      <div class="section-title">05 — Botoes</div>
+
+      <div class="section-subtitle">Primary — Cobre</div>
+      <div class="btn-row">
+        <button class="btn btn-primary btn-lg">Acessar Mentoria</button>
+        <button class="btn btn-primary btn-md">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          Continuar
+        </button>
+        <button class="btn btn-primary btn-sm">Salvar</button>
+        <button class="btn btn-primary btn-md btn-icon-only">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </button>
+        <button class="btn btn-primary btn-sm btn-icon-only">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </button>
+      </div>
+
+      <div class="section-subtitle mt-5">Secondary — Surface</div>
+      <div class="btn-row">
+        <button class="btn btn-secondary btn-lg">Ver Detalhes</button>
+        <button class="btn btn-secondary btn-md">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          Buscar
+        </button>
+        <button class="btn btn-secondary btn-sm">Filtrar</button>
+        <button class="btn btn-secondary btn-md btn-icon-only">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/></svg>
+        </button>
+      </div>
+
+      <div class="section-subtitle mt-5">Outline — Cobre</div>
+      <div class="btn-row">
+        <button class="btn btn-outline btn-lg">Documentacao</button>
+        <button class="btn btn-outline btn-md">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          Abrir
+        </button>
+        <button class="btn btn-outline btn-sm">Export</button>
+      </div>
+
+      <div class="section-subtitle mt-5">Ghost / Disabled</div>
+      <div class="btn-row">
+        <button class="btn btn-ghost btn-md">Cancelar</button>
+        <button class="btn btn-ghost btn-sm">Limpar</button>
+        <button class="btn btn-primary btn-md" disabled>Disabled</button>
+        <button class="btn btn-secondary btn-sm" disabled>Disabled</button>
+      </div>
+    </div>
+
+    <!-- ——— CARDS ——— -->
+    <div class="section">
+      <div class="section-title">05 — Cards</div>
+      <div style="display:flex;flex-direction:column;gap:var(--sp-4)">
+        <div class="card">
+          <div class="card-icon"></div>
+          <div class="card-title">Inteligencia Estrategica</div>
+          <div class="card-desc">Frameworks de posicionamento, funil e narrativa para infoprodutores que querem jogar no longo prazo.</div>
+        </div>
+        <div class="card">
+          <div class="card-icon"></div>
+          <div class="card-title">Inteligencia Artificial</div>
+          <div class="card-desc">Automacao, analise de dados e sistemas de decisao alimentados por IA aplicada ao negocio.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ——— INPUTS ——— -->
+    <div class="section">
+      <div class="section-title">06 — Inputs</div>
+      <div class="input-group">
+        <label class="input-label">Default</label>
+        <input class="input" type="text" placeholder="Digite seu email">
+      </div>
+      <div class="input-group">
+        <label class="input-label">Focused</label>
+        <input class="input" type="text" value="wallace@attos.com" style="border-color:var(--copper)">
+      </div>
+      <div class="input-group">
+        <label class="input-label">Error</label>
+        <input class="input input-error" type="text" value="email-invalido">
+        <span class="input-helper-error">Formato de email invalido</span>
+      </div>
+      <div class="input-group">
+        <label class="input-label">Disabled</label>
+        <input class="input" type="text" placeholder="Indisponivel" disabled>
+      </div>
+    </div>
+
+    <!-- ——— BADGES ——— -->
+    <div class="section">
+      <div class="section-title">06 — Badges</div>
+      <div class="section-subtitle">Filled</div>
+      <div class="badge-row">
+        <span class="badge badge-copper badge-md">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          Mentor
+          <span class="badge-dismiss"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span>
+        </span>
+        <span class="badge badge-success badge-md">Ativo</span>
+        <span class="badge badge-warning badge-md">Pendente</span>
+        <span class="badge badge-error badge-md">Atrasado</span>
+      </div>
+      <div class="badge-row">
+        <span class="badge badge-copper badge-sm">Pro</span>
+        <span class="badge badge-surface badge-sm">Draft</span>
+        <span class="badge badge-success badge-sm">Live</span>
+      </div>
+
+      <div class="section-subtitle mt-5">Outlined</div>
+      <div class="badge-row">
+        <span class="badge badge-copper-outline badge-md">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          Em Progresso
+        </span>
+        <span class="badge badge-success-outline badge-md">Completo</span>
+        <span class="badge badge-error-outline badge-md">Falha</span>
+      </div>
+      <div class="badge-row">
+        <span class="badge badge-copper-outline badge-sm">v2.1</span>
+        <span class="badge badge-warning-outline badge-sm">Beta</span>
+      </div>
+    </div>
+
+    <!-- ——— CHECKBOXES ——— -->
+    <div class="section">
+      <div class="section-title">06 — Checkboxes — 6 Estados</div>
+      <div class="checkbox-row">
+        <div class="checkbox-item">
+          <div class="checkbox"></div>
+          <span>Default</span>
+        </div>
+        <div class="checkbox-item">
+          <div class="checkbox checkbox-hover"></div>
+          <span>Hover</span>
+        </div>
+        <div class="checkbox-item">
+          <div class="checkbox checkbox-focus"></div>
+          <span>Focus</span>
+        </div>
+        <div class="checkbox-item">
+          <div class="checkbox checkbox-checked">
+            <svg width="10" height="10" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <span>Checked</span>
+        </div>
+        <div class="checkbox-item">
+          <div class="checkbox checkbox-indeterminate">
+            <svg width="10" height="10" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </div>
+          <span>Indeterminate</span>
+        </div>
+        <div class="checkbox-item">
+          <div class="checkbox checkbox-disabled"></div>
+          <span style="opacity:0.3">Disabled</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ——— PROGRESS ——— -->
+    <div class="section">
+      <div class="section-title">06 — Progress</div>
+      <div class="progress-group">
+        <div class="progress-item">
+          <div class="progress-header"><span>Modulo concluido</span><span>73%</span></div>
+          <div class="progress-track"><div class="progress-fill" style="width:73%"></div></div>
+        </div>
+        <div class="progress-item">
+          <div class="progress-header"><span>Meta de receita</span><span>91%</span></div>
+          <div class="progress-track"><div class="progress-fill progress-success" style="width:91%"></div></div>
+        </div>
+        <div class="progress-item">
+          <div class="progress-header"><span>Risco de churn</span><span>38%</span></div>
+          <div class="progress-track"><div class="progress-fill progress-warning" style="width:38%"></div></div>
+        </div>
+        <div class="progress-item">
+          <div class="progress-header"><span>Taxa de erro</span><span>12%</span></div>
+          <div class="progress-track"><div class="progress-fill progress-error" style="width:12%"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ——— STAT CARDS ——— -->
+    <div class="section section-full">
+      <div class="section-title">06 — Stat Cards</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:var(--sp-4)">
+        <div class="stat-card">
+          <div class="stat-accent stat-accent-copper"></div>
+          <div class="stat-value">2,847</div>
+          <div class="stat-label">Membros ativos</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-accent stat-accent-success"></div>
+          <div class="stat-value">R$1.2M</div>
+          <div class="stat-label">Receita mensal</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-accent stat-accent-warning"></div>
+          <div class="stat-value">94.2%</div>
+          <div class="stat-label">Taxa de conclusao</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-accent stat-accent-error"></div>
+          <div class="stat-value">4.7min</div>
+          <div class="stat-label">Sessao media</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ——— DIRETRIZES ——— -->
+    <div class="section section-full">
+      <div class="section-title">05 — Diretrizes Visuais</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-8)">
+        <div>
+          <div class="section-subtitle" style="color:var(--copper)">Faca</div>
+          <div style="font-size:12px;color:var(--text-secondary);line-height:2">
+            + Fundos escuros como padrao<br>
+            + Espacamento generoso entre elementos<br>
+            + Tipografia grande e confiante<br>
+            + Cobre apenas em detalhes pontuais<br>
+            + Bordas minimas ou inexistentes<br>
+            + Grid limpo, alinhamento rigoroso<br>
+            + Cantos retos ou levemente arredondados<br>
+            + Icones lineares, traco fino<br>
+            + Animacoes sutis e lentas<br>
+            + Off-white no texto (nunca branco puro em body)
+          </div>
+        </div>
+        <div>
+          <div class="section-subtitle" style="color:var(--error)">Nao Faca</div>
+          <div style="font-size:12px;color:var(--text-secondary);line-height:2">
+            — Gradientes coloridos ou neon<br>
+            — Dourado ou elementos 'luxury generico'<br>
+            — Glassmorphism ou efeitos de vidro<br>
+            — Icones coloridos ou ilustracoes cartoon<br>
+            — Fontes decorativas ou serifadas no body<br>
+            — Mais de uma cor de acento<br>
+            — Sombras suaves (drop shadow)<br>
+            — Cantos muito arredondados (pill shape)<br>
+            — Foguetes, graficos subindo, emojis<br>
+            — Fundos claros como padrao
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:var(--sp-6);padding-top:var(--sp-4);border-top:1px solid var(--border-subtle)">
+        <div style="font-size:11px;color:var(--copper);font-weight:600;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:var(--sp-2)">Teste do Silencio</div>
+        <div style="font-size:13px;color:var(--text-secondary)">Se remover um elemento e nada mudar, ele nao deveria estar ali.</div>
+      </div>
+    </div>
+
+    <!-- ——— CSS EXPORT ——— -->
+    <div class="section section-full">
+      <div class="section-title">07 — CSS Export</div>
+      <div class="code-block"><span class="t-comment">/* ====================================
+   ATTOS DESIGN SYSTEM v2
+   Brutalismo Refinado
+   "Barulho Silencioso"
+   ==================================== */</span>
+
+:root {
+  <span class="t-comment">/* Base — Fundacao */</span>
+  <span class="t-prop">--base-bg</span>: <span class="t-val">#0F0F0F</span>;
+  <span class="t-prop">--base-anthracite</span>: <span class="t-val">#1A1A1A</span>;
+  <span class="t-prop">--base-graphite-dark</span>: <span class="t-val">#2A2A2A</span>;
+  <span class="t-prop">--base-graphite-mid</span>: <span class="t-val">#3D3D3D</span>;
+  <span class="t-prop">--base-graphite-light</span>: <span class="t-val">#5A5A5A</span>;
+
+  <span class="t-comment">/* Texto */</span>
+  <span class="t-prop">--text-primary</span>: <span class="t-val">#E8E4E0</span>;
+  <span class="t-prop">--text-secondary</span>: <span class="t-val">#8A8A8A</span>;
+  <span class="t-prop">--text-tertiary</span>: <span class="t-val">#5A5A5A</span>;
+  <span class="t-prop">--text-white</span>: <span class="t-val">#FFFFFF</span>;
+
+  <span class="t-comment">/* Acento — Cobre (uso cirurgico: 2%) */</span>
+  <span class="t-prop">--copper-light</span>: <span class="t-val">#D4956A</span>;
+  <span class="t-prop">--copper</span>: <span class="t-val">#B87333</span>;
+  <span class="t-prop">--copper-muted</span>: <span class="t-val">#9A6840</span>;
+  <span class="t-prop">--copper-dark</span>: <span class="t-val">#8B5A2B</span>;
+
+  <span class="t-comment">/* Semantic */</span>
+  <span class="t-prop">--success</span>: <span class="t-val">#4ADE80</span>;
+  <span class="t-prop">--success-muted</span>: <span class="t-val">#22C55E</span>;
+  <span class="t-prop">--success-dark</span>: <span class="t-val">#16A34A</span>;
+  <span class="t-prop">--warning</span>: <span class="t-val">#FBBF24</span>;
+  <span class="t-prop">--warning-muted</span>: <span class="t-val">#F59E0B</span>;
+  <span class="t-prop">--warning-dark</span>: <span class="t-val">#D97706</span>;
+  <span class="t-prop">--error</span>: <span class="t-val">#F87171</span>;
+  <span class="t-prop">--error-muted</span>: <span class="t-val">#EF4444</span>;
+  <span class="t-prop">--error-dark</span>: <span class="t-val">#DC2626</span>;
+  <span class="t-prop">--info</span>: <span class="t-val">#60A5FA</span>;
+  <span class="t-prop">--info-muted</span>: <span class="t-val">#3B82F6</span>;
+  <span class="t-prop">--info-dark</span>: <span class="t-val">#2563EB</span>;
+
+  <span class="t-comment">/* Typography */</span>
+  <span class="t-prop">--font-heading</span>: <span class="t-val">'Space Grotesk', system-ui, sans-serif</span>;
+  <span class="t-prop">--font-body</span>: <span class="t-val">'Inter', system-ui, sans-serif</span>;
+  <span class="t-prop">--font-display</span>: <span class="t-val">'DM Serif Display', Georgia, serif</span>;
+
+  <span class="t-comment">/* Spacing (8pt grid) */</span>
+  <span class="t-prop">--sp-1</span>: <span class="t-val">4px</span>;
+  <span class="t-prop">--sp-2</span>: <span class="t-val">8px</span>;
+  <span class="t-prop">--sp-3</span>: <span class="t-val">12px</span>;
+  <span class="t-prop">--sp-4</span>: <span class="t-val">16px</span>;
+  <span class="t-prop">--sp-5</span>: <span class="t-val">20px</span>;
+  <span class="t-prop">--sp-6</span>: <span class="t-val">24px</span>;
+  <span class="t-prop">--sp-8</span>: <span class="t-val">32px</span>;
+  <span class="t-prop">--sp-10</span>: <span class="t-val">40px</span>;
+  <span class="t-prop">--sp-12</span>: <span class="t-val">48px</span>;
+  <span class="t-prop">--sp-14</span>: <span class="t-val">56px</span>;
+  <span class="t-prop">--sp-16</span>: <span class="t-val">64px</span>;
+
+  <span class="t-comment">/* Radius — reto ou levemente arredondado */</span>
+  <span class="t-prop">--radius-none</span>: <span class="t-val">0</span>;
+  <span class="t-prop">--radius-xs</span>: <span class="t-val">2px</span>;
+  <span class="t-prop">--radius-sm</span>: <span class="t-val">4px</span>;
+  <span class="t-prop">--radius-md</span>: <span class="t-val">6px</span>;
+  <span class="t-prop">--radius-lg</span>: <span class="t-val">8px</span>;
+
+  <span class="t-comment">/* Borders */</span>
+  <span class="t-prop">--border-default</span>: <span class="t-val">#3D3D3D</span>;
+  <span class="t-prop">--border-subtle</span>: <span class="t-val">#2A2A2A</span>;
+  <span class="t-prop">--border-copper</span>: <span class="t-val">#B87333</span>;
+
+  <span class="t-comment">/* Transitions — sutis e lentas */</span>
+  <span class="t-prop">--ease</span>: <span class="t-val">cubic-bezier(0.25, 0.1, 0.25, 1)</span>;
+  <span class="t-prop">--duration</span>: <span class="t-val">300ms</span>;
+  <span class="t-prop">--duration-slow</span>: <span class="t-val">500ms</span>;
+}
+
+<span class="t-comment">/* Light theme override */</span>
+[data-theme="light"] {
+  <span class="t-prop">--base-bg</span>: <span class="t-val">#F5F2EF</span>;
+  <span class="t-prop">--base-anthracite</span>: <span class="t-val">#EBE7E3</span>;
+  <span class="t-prop">--base-graphite-dark</span>: <span class="t-val">#DDD9D5</span>;
+  <span class="t-prop">--base-graphite-mid</span>: <span class="t-val">#C5C0BA</span>;
+  <span class="t-prop">--base-graphite-light</span>: <span class="t-val">#9A9590</span>;
+  <span class="t-prop">--text-primary</span>: <span class="t-val">#0F0F0F</span>;
+  <span class="t-prop">--text-secondary</span>: <span class="t-val">#5A5A5A</span>;
+  <span class="t-prop">--text-tertiary</span>: <span class="t-val">#8A8A8A</span>;
+  <span class="t-prop">--border-default</span>: <span class="t-val">#C5C0BA</span>;
+  <span class="t-prop">--border-subtle</span>: <span class="t-val">#DDD9D5</span>;
+  <span class="t-prop">--copper</span>: <span class="t-val">#9A6840</span>;
+  <span class="t-prop">--copper-light</span>: <span class="t-val">#B87333</span>;
+}</div>
+    </div>
+
+  </div><!-- /grid -->
+
+  <!-- ——— FOOTER ——— -->
+  <footer style="margin-top:var(--sp-16);padding-top:var(--sp-8);border-top:1px solid var(--border-subtle);display:flex;justify-content:space-between;align-items:flex-end">
+    <div>
+      <div style="font-family:var(--font-display);font-size:24px;color:var(--text-primary)">Attos</div>
+      <div style="font-size:11px;color:var(--text-tertiary);margin-top:var(--sp-1)">Mentoria Wallace & Jeff</div>
+    </div>
+    <div style="text-align:right">
+      <div style="font-size:11px;color:var(--text-tertiary)">Confidencial — Abril 2026</div>
+      <div style="font-size:13px;color:var(--text-secondary);margin-top:var(--sp-2);font-style:italic">"Quem esta dentro sabe. Quem esta fora quer entrar."</div>
+    </div>
+  </footer>
+
+</div><!-- /showcase -->
+
+<script>
+function toggleTheme() {
+  const html = document.documentElement;
+  const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  html.setAttribute('data-theme', next);
+  document.getElementById('ico-sun').style.display = next === 'dark' ? 'block' : 'none';
+  document.getElementById('ico-moon').style.display = next === 'light' ? 'block' : 'none';
+  document.getElementById('theme-label').textContent = next === 'dark' ? 'Light' : 'Dark';
+}
+</script>
+
+</body>
+</html>

@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { BarChart3, Users, Zap, Calendar, FileText, Flame, Target, Brain } from "lucide-react";
+import { BarChart3, Users, Zap, Calendar, FileText, Flame, Target, Brain, LogOut } from "lucide-react";
+import { LogoutButton } from "./logout-button";
 
 const navItems = [
   { href: "/meu-perfil", label: "Meu Perfil", icon: Flame, highlight: true },
@@ -43,8 +44,9 @@ export default function DashboardLayout({
           ))}
         </nav>
 
-        <div className="p-4 border-t border-[var(--border)] text-xs text-[var(--muted-foreground)]">
-          Content Intelligence v1.0
+        <div className="p-4 border-t border-[var(--border)] flex items-center justify-between">
+          <span className="text-xs text-[var(--muted-foreground)]">Content Intel v1.0</span>
+          <LogoutButton />
         </div>
       </aside>
 

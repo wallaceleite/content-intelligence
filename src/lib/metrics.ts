@@ -17,14 +17,22 @@ export interface DerivedMetrics {
   salesPotentialScore: number;
 }
 
-/** Use views if available; otherwise use likes as minimum reach proxy */
-function getBaseMetric(views: number, likes: number): number {
-  return views > 0 ? views : likes > 0 ? likes : 1;
+/**
+ * Determine the base metric for engagement rate calculation.
+ * - If views > 0: use max(views, followers) to prevent >100% on viral low-view posts
+ * - If views = 0: use followers (standard for carousels/images)
+ * - Fallback: use likes (minimum proxy)
+ */
+function getBaseMetric(views: number, followersCount: number, likes: number): number {
+  if (views > 0) return followersCount > 0 ? Math.max(views, followersCount) : views;
+  if (followersCount > 0) return followersCount;
+  return likes > 0 ? likes : 1;
 }
 
 export function calculateDerivedMetrics(
   post: RawPostMetrics,
-  profileAvgEngagement: number
+  profileAvgEngagement: number,
+  followersCount: number = 0
 ): DerivedMetrics {
   const views = post.views || 0;
   const likes = post.likes || 0;
@@ -33,10 +41,10 @@ export function calculateDerivedMetrics(
   const saves = post.saves || 0;
 
   const totalEngagement = likes + comments + shares + saves;
-  const base = getBaseMetric(views, likes);
+  const base = getBaseMetric(views, followersCount, likes);
 
-  // Engagement Rate (%) — capped at 100%
-  const engagementRate = Math.min((totalEngagement / base) * 100, 100);
+  // Engagement Rate (%)
+  const engagementRate = (totalEngagement / base) * 100;
 
   // Comment-to-Like Ratio — high = conversational/polarizing content
   const commentToLikeRatio = likes > 0 ? comments / likes : 0;
@@ -52,13 +60,11 @@ export function calculateDerivedMetrics(
   const outlierScore =
     profileAvgEngagement > 0 ? engagementRate / profileAvgEngagement : 1;
 
-  // Sales Potential Score (weighted composite) — capped at 100%
-  const salesPotentialScore = Math.min(
+  // Sales Potential Score (weighted composite)
+  const salesPotentialScore =
     (saves * 5 + comments * 3 * Math.min(commentToLikeRatio, 1) + shares * 2 + likes) /
-      base *
-      100,
-    100
-  );
+    base *
+    100;
 
   return {
     engagementRate: round(engagementRate, 4),
@@ -80,20 +86,21 @@ export function filterAndRankPosts<
   posts: T[],
   minViews: number,
   minEngagement: number,
-  topN?: number
+  topN?: number,
+  followersCount: number = 0
 ): T[] {
   let filtered = posts.filter((p) => {
-    const base = getBaseMetric(p.views, p.likes);
-    const engagement = Math.min(((p.likes + p.comments) / base) * 100, 100);
+    const base = getBaseMetric(p.views, followersCount, p.likes);
+    const engagement = ((p.likes + p.comments) / base) * 100;
     return p.views >= minViews && engagement >= minEngagement;
   });
 
   // Sort by engagement rate descending
   filtered.sort((a, b) => {
-    const baseA = getBaseMetric(a.views, a.likes);
-    const baseB = getBaseMetric(b.views, b.likes);
-    const ea = Math.min(((a.likes + a.comments) / baseA) * 100, 100);
-    const eb = Math.min(((b.likes + b.comments) / baseB) * 100, 100);
+    const baseA = getBaseMetric(a.views, followersCount, a.likes);
+    const baseB = getBaseMetric(b.views, followersCount, b.likes);
+    const ea = ((a.likes + a.comments) / baseA) * 100;
+    const eb = ((b.likes + b.comments) / baseB) * 100;
     return eb - ea;
   });
 

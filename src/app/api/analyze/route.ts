@@ -222,7 +222,7 @@ export async function POST(req: NextRequest) {
     const avgLikes = Math.round(posts.reduce((s, p) => s + p.likes_count, 0) / posts.length);
     const avgComments = Math.round(posts.reduce((s, p) => s + p.comments_count, 0) / posts.length);
     const avgEng =
-      Math.round((posts.reduce((s, p) => s + Math.min(p.engagement_rate || 0, 100), 0) / posts.length) * 100) / 100;
+      Math.round((posts.reduce((s, p) => s + (p.engagement_rate || 0), 0) / posts.length) * 100) / 100;
 
     const prompt = buildAnalysisPrompt(
       {

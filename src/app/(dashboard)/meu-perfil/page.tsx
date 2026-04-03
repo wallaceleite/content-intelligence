@@ -140,19 +140,19 @@ export default async function MeuPerfilPage() {
   const totalShares = allPosts.reduce((s, p) => s + (p.shares_count || 0), 0);
   const totalReach = allPosts.reduce((s, p) => s + (p.reach_count || 0), 0);
   const avgEng = allPosts.length
-    ? Math.round((allPosts.reduce((s, p) => s + Math.min(p.engagement_rate || 0, 100), 0) / allPosts.length) * 100) / 100
+    ? Math.round((allPosts.reduce((s, p) => s + (p.engagement_rate || 0), 0) / allPosts.length) * 100) / 100
     : 0;
 
   // Competitor benchmark
   const compAvgEng = competitorPosts?.length
-    ? Math.round((competitorPosts.reduce((s, p) => s + Math.min(p.engagement_rate || 0, 100), 0) / competitorPosts.length) * 100) / 100
+    ? Math.round((competitorPosts.reduce((s, p) => s + (p.engagement_rate || 0), 0) / competitorPosts.length) * 100) / 100
     : 0;
 
   // Engagement by post type
   const engByType = (type: string) => {
     const filtered = allPosts.filter((p) => p.post_type === type);
     if (!filtered.length) return 0;
-    return Math.round((filtered.reduce((s, p) => s + Math.min(p.engagement_rate || 0, 100), 0) / filtered.length) * 100) / 100;
+    return Math.round((filtered.reduce((s, p) => s + (p.engagement_rate || 0), 0) / filtered.length) * 100) / 100;
   };
 
   // Funnel distribution
@@ -556,7 +556,7 @@ export default async function MeuPerfilPage() {
                 {competitors.map((comp) => {
                   const compPosts = competitorPosts?.filter((p: any) => p.profiles?.username === comp.username) || [];
                   const compEng = compPosts.length
-                    ? Math.round((compPosts.reduce((s: number, p: any) => s + Math.min(p.engagement_rate || 0, 100), 0) / compPosts.length) * 100) / 100
+                    ? Math.round((compPosts.reduce((s: number, p: any) => s + (p.engagement_rate || 0), 0) / compPosts.length) * 100) / 100
                     : 0;
                   return (
                     <tr key={comp.username} className="border-b border-[var(--border)]">

@@ -112,7 +112,7 @@ export async function POST(req: NextRequest) {
     const totalShares = (weekPosts || []).reduce((s, p) => s + (p.shares_count || 0), 0);
     const totalReach = (weekPosts || []).reduce((s, p) => s + (p.reach_count || 0), 0);
     const avgEng = weekPosts?.length
-      ? Math.round((weekPosts.reduce((s, p) => s + Math.min(p.engagement_rate || 0, 100), 0) / weekPosts.length) * 100) / 100
+      ? Math.round((weekPosts.reduce((s, p) => s + (p.engagement_rate || 0), 0) / weekPosts.length) * 100) / 100
       : 0;
 
     await supabaseAdmin

@@ -107,7 +107,8 @@ export async function POST(req: NextRequest) {
           duration: safeFloat(p.videoDuration),
           postedAt: p.timestamp,
         },
-        avgEngagement
+        avgEngagement,
+        safeInt(followersCount)
       );
 
       return {

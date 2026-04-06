@@ -288,7 +288,7 @@ export default async function MeuPerfilPage({
       </div>
 
       {/* Sync button */}
-      <SyncButton lastSync={batch?.created_at} />
+      <SyncButton lastSync={profile.last_synced_at} />
 
       {/* KPIs Row 1 — Visão Geral */}
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 mb-4">

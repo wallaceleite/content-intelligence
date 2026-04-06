@@ -55,6 +55,24 @@ export async function POST(req: NextRequest) {
 
     if (!profile) throw new Error("Profile not found");
 
+    // Save daily snapshot for followers evolution chart
+    const today = new Date().toISOString().split("T")[0];
+    try {
+      await supabaseAdmin
+        .from("daily_snapshots")
+        .upsert(
+          {
+            profile_id: profile.id,
+            snapshot_date: today,
+            followers_count: profileData.followers_count || 0,
+            following_count: profileData.follows_count || 0,
+            posts_count: profileData.media_count || 0,
+          },
+          { onConflict: "profile_id,snapshot_date" }
+        );
+      results.push(`Snapshot: ${today}`);
+    } catch { /* table may not exist yet */ }
+
     let updated = 0;
     for (const media of allMedia) {
       let saves = 0, shares = 0, reach = 0;

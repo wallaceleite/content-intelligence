@@ -119,6 +119,59 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // 4. Pull audience demographics (gender, age, city, country)
+    let demoSynced = 0;
+    try {
+      for (const metricType of ["age", "gender", "city", "country"]) {
+        const demoData = await igFetch(
+          `${IG_API}/me/insights?metric=follower_demographics&period=lifetime&metric_type=${metricType}`
+        );
+
+        if (demoData.data?.[0]?.total_value?.breakdowns?.[0]?.results) {
+          const results = demoData.data[0].total_value.breakdowns[0].results;
+          const rows = results.map((r: any) => ({
+            profile_id: profile.id,
+            metric_type: metricType,
+            dimension: r.dimension_values[0],
+            value: r.value,
+            synced_at: new Date().toISOString(),
+          }));
+
+          if (rows.length > 0) {
+            await supabaseAdmin
+              .from("audience_demographics")
+              .delete()
+              .eq("profile_id", profile.id)
+              .eq("metric_type", metricType);
+
+            await supabaseAdmin
+              .from("audience_demographics")
+              .insert(rows);
+            demoSynced += rows.length;
+          }
+        }
+      }
+    } catch (demoErr) {
+      console.error("Demographics fetch error:", demoErr);
+    }
+
+    // 5. Save daily snapshot
+    const today = new Date().toISOString().split("T")[0];
+    try {
+      await supabaseAdmin
+        .from("daily_snapshots")
+        .upsert(
+          {
+            profile_id: profile.id,
+            snapshot_date: today,
+            followers_count: profileData.followers_count || 0,
+            following_count: profileData.follows_count || 0,
+            posts_count: profileData.media_count || 0,
+          },
+          { onConflict: "profile_id,snapshot_date" }
+        );
+    } catch { /* table may not exist yet */ }
+
     return NextResponse.json({
       success: true,
       profile: {
@@ -131,6 +184,7 @@ export async function POST(req: NextRequest) {
         updated,
         errors,
       },
+      demographics: demoSynced,
     });
   } catch (error: any) {
     console.error("Instagram sync error:", error);

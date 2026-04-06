@@ -8,10 +8,26 @@ import { GrowthChart, FunnelDonut, PerformanceBar, BenchmarkRadar } from "@/comp
 import { AnimatedStatCard } from "@/components/dashboard/AnimatedStatCard";
 import { AnimatedSection } from "@/components/dashboard/AnimatedSection";
 import { AnimatedBar } from "@/components/dashboard/Animate";
+import { PeriodFilter } from "@/components/dashboard/PeriodFilter";
+import { FollowerGrowthChart } from "@/components/dashboard/FollowerGrowthChart";
+import { GenderDonut, AgeBarChart, CityBarChart } from "@/components/dashboard/DemographicsCharts";
+import { subDays, format, parseISO } from "date-fns";
 
 export const revalidate = 60;
 
 const MY_USERNAME = "owallaceleite";
+
+function getDateRange(period: string, from?: string, to?: string) {
+  const end = new Date();
+  if (period === "custom" && from && to) {
+    return { start: parseISO(from), end: parseISO(to) };
+  }
+  if (period === "all") {
+    return { start: new Date("2020-01-01"), end };
+  }
+  const days = period === "7d" ? 7 : period === "90d" ? 90 : 30;
+  return { start: subDays(end, days), end };
+}
 
 function postLabel(post: any): string {
   if (post.hook_text && post.hook_text.length > 5) return post.hook_text.slice(0, 55) + (post.hook_text.length > 55 ? "..." : "");
@@ -31,7 +47,17 @@ function SectionHeader({ icon: Icon, title, color }: { icon: any; title: string;
   );
 }
 
-export default async function MeuPerfilPage() {
+export default async function MeuPerfilPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ period?: string; from?: string; to?: string }>;
+}) {
+  const params = await searchParams;
+  const period = params.period || "30d";
+  const { start: dateStart, end: dateEnd } = getDateRange(period, params.from, params.to);
+  const startStr = dateStart.toISOString().split("T")[0];
+  const endStr = dateEnd.toISOString().split("T")[0];
+
   // Get my profile
   const { data: profile } = await supabaseAdmin
     .from("profiles")
@@ -109,6 +135,53 @@ export default async function MeuPerfilPage() {
     .select("engagement_rate, profile_id, profiles(username)")
     .neq("profile_id", profile.id)
     .not("engagement_rate", "is", null);
+
+  // Get daily snapshots for followers chart
+  let snapshots: any[] = [];
+  try {
+    const { data } = await supabaseAdmin
+      .from("daily_snapshots")
+      .select("snapshot_date, followers_count")
+      .eq("profile_id", profile.id)
+      .gte("snapshot_date", startStr)
+      .lte("snapshot_date", endStr)
+      .order("snapshot_date", { ascending: true });
+    snapshots = data || [];
+  } catch { /* table may not exist yet */ }
+
+  const followerChartData = snapshots.map((s: any) => ({
+    date: format(parseISO(s.snapshot_date), "dd/MM"),
+    followers: s.followers_count,
+  }));
+
+  // Get demographics
+  let demographics: any[] = [];
+  try {
+    const { data } = await supabaseAdmin
+      .from("audience_demographics")
+      .select("metric_type, dimension, value")
+      .eq("profile_id", profile.id);
+    demographics = data || [];
+  } catch { /* table may not exist yet */ }
+
+  const genderData = demographics
+    .filter((d: any) => d.metric_type === "gender")
+    .map((d: any) => ({
+      name: d.dimension === "M" ? "Masculino" : d.dimension === "F" ? "Feminino" : "Outro",
+      value: Number(d.value),
+      color: d.dimension === "M" ? "#3B82F6" : d.dimension === "F" ? "#ec4899" : "#8B5CF6",
+    }));
+
+  const ageData = demographics
+    .filter((d: any) => d.metric_type === "age")
+    .sort((a: any, b: any) => a.dimension.localeCompare(b.dimension))
+    .map((d: any) => ({ name: d.dimension, value: Number(d.value) }));
+
+  const cityData = demographics
+    .filter((d: any) => d.metric_type === "city")
+    .sort((a: any, b: any) => Number(b.value) - Number(a.value))
+    .slice(0, 10)
+    .map((d: any) => ({ name: d.dimension, value: Number(d.value) }));
 
   // === CALCULATE METRICS ===
   const allPosts = posts || [];
@@ -208,6 +281,11 @@ export default async function MeuPerfilPage() {
         )}
       </div>
 
+      {/* Period Filter */}
+      <div className="mb-6">
+        <PeriodFilter />
+      </div>
+
       {/* Sync button */}
       <div className="mb-6 p-4 glass-card flex items-center justify-between" style={{ borderStyle: "dashed" }}>
         <div>
@@ -271,6 +349,31 @@ export default async function MeuPerfilPage() {
             <p className="text-[10px] text-[var(--muted-foreground)]">Acima de 30% = boa distribuição</p>
           </div>
         </div>
+      )}
+
+      {/* FOLLOWERS EVOLUTION + DEMOGRAPHICS */}
+      <AnimatedSection className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div className="glass-card p-6">
+          <SectionHeader icon={TrendingUp} title="Evolução de Seguidores" color="text-[var(--accent)]" />
+          <FollowerGrowthChart data={followerChartData} />
+        </div>
+        <div className="glass-card p-6">
+          <SectionHeader icon={Users} title="Gênero da Audiência" color="text-blue-400" />
+          <GenderDonut data={genderData} />
+        </div>
+      </AnimatedSection>
+
+      {(ageData.length > 0 || cityData.length > 0) && (
+        <AnimatedSection className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <div className="glass-card p-6">
+            <SectionHeader icon={BarChart3} title="Faixa Etária" color="text-[var(--accent)]" />
+            <AgeBarChart data={ageData} />
+          </div>
+          <div className="glass-card p-6">
+            <SectionHeader icon={Target} title="Top Cidades" color="text-orange-400" />
+            <CityBarChart data={cityData} />
+          </div>
+        </AnimatedSection>
       )}
 
       {/* CHARTS ROW */}

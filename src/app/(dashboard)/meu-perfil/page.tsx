@@ -9,6 +9,7 @@ import { AnimatedStatCard } from "@/components/dashboard/AnimatedStatCard";
 import { AnimatedSection } from "@/components/dashboard/AnimatedSection";
 import { AnimatedBar } from "@/components/dashboard/Animate";
 import { PeriodFilter } from "@/components/dashboard/PeriodFilter";
+import { SyncButton } from "@/components/dashboard/SyncButton";
 import { FollowerGrowthChart } from "@/components/dashboard/FollowerGrowthChart";
 import { GenderDonut, AgeBarChart, CityBarChart } from "@/components/dashboard/DemographicsCharts";
 import { subDays, format, parseISO } from "date-fns";
@@ -287,20 +288,7 @@ export default async function MeuPerfilPage({
       </div>
 
       {/* Sync button */}
-      <div className="mb-6 p-4 glass-card flex items-center justify-between" style={{ borderStyle: "dashed" }}>
-        <div>
-          <p className="text-sm font-medium">Sincronizar dados do Instagram</p>
-          <p className="text-xs" style={{ color: "var(--text-secondary)" }}>Atualiza saves, shares, reach e impressões via API oficial</p>
-        </div>
-        <form action="/api/instagram-sync" method="POST">
-          <button type="submit" className="px-4 py-2 text-sm rounded-xl font-medium hover:opacity-90 transition-opacity" style={{
-            background: "var(--accent)",
-            color: "var(--accent-foreground)",
-          }}>
-            Sincronizar Agora
-          </button>
-        </form>
-      </div>
+      <SyncButton lastSync={batch?.created_at} />
 
       {/* KPIs Row 1 — Visão Geral */}
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 mb-4">

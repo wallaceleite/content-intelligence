@@ -5,38 +5,21 @@ import {
   Users, Clock, Hash, FileText, Flame, Shield, Lightbulb, Calendar
 } from "lucide-react";
 import { GrowthChart, FunnelDonut, PerformanceBar, BenchmarkRadar } from "@/components/dashboard/Charts";
+import { AnimatedStatCard } from "@/components/dashboard/AnimatedStatCard";
+import { AnimatedSection } from "@/components/dashboard/AnimatedSection";
+import { AnimatedBar } from "@/components/dashboard/Animate";
 
 export const revalidate = 60;
 
 const MY_USERNAME = "owallaceleite";
 
 function postLabel(post: any): string {
-  // Show hook text, or first line of caption, or shortcode as fallback
   if (post.hook_text && post.hook_text.length > 5) return post.hook_text.slice(0, 55) + (post.hook_text.length > 55 ? "..." : "");
   if (post.caption) {
     const firstLine = post.caption.split(/[\n]/)[0]?.trim() || "";
     return firstLine.slice(0, 55) + (firstLine.length > 55 ? "..." : "");
   }
   return post.shortcode || "—";
-}
-
-function StatCard({ label, value, sub, icon: Icon, color, trend }: {
-  label: string; value: string; sub?: string; icon: any; color: string; trend?: "up" | "down" | "neutral";
-}) {
-  return (
-    <div className="glass-card p-4">
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-2">
-          <Icon className={`w-4 h-4 ${color}`} />
-          <span className="text-xs text-[var(--muted-foreground)]">{label}</span>
-        </div>
-        {trend === "up" && <ArrowUpRight className="w-3.5 h-3.5 text-green-400" />}
-        {trend === "down" && <ArrowDownRight className="w-3.5 h-3.5 text-red-400" />}
-      </div>
-      <p className="text-xl font-bold">{value}</p>
-      {sub && <p className="text-xs text-[var(--muted-foreground)] mt-0.5">{sub}</p>}
-    </div>
-  );
 }
 
 function SectionHeader({ icon: Icon, title, color }: { icon: any; title: string; color: string }) {
@@ -243,29 +226,30 @@ export default async function MeuPerfilPage() {
 
       {/* KPIs Row 1 — Visão Geral */}
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 mb-4">
-        <StatCard label="Seguidores" value={profile.followers_count?.toLocaleString("pt-BR") || "—"} icon={Users} color="text-blue-400" />
-        <StatCard label="Posts" value={allPosts.length.toString()} sub={`${videos.length} vídeos | ${carousels.length} carrosséis | ${images.length} imgs`} icon={FileText} color="text-purple-400" />
-        <StatCard label="Views Total" value={totalViews.toLocaleString("pt-BR")} icon={Eye} color="text-cyan-400" />
-        <StatCard label="Likes Total" value={totalLikes.toLocaleString("pt-BR")} icon={Heart} color="text-pink-400" />
-        <StatCard label="Comentários" value={totalComments.toLocaleString("pt-BR")} icon={MessageSquare} color="text-green-400" />
-        <StatCard
+        <AnimatedStatCard label="Seguidores" value={profile.followers_count?.toLocaleString("pt-BR") || "—"} iconName="Users" color="text-blue-400" delay={0} />
+        <AnimatedStatCard label="Posts" value={allPosts.length.toString()} sub={`${videos.length} vídeos | ${carousels.length} carrosséis | ${images.length} imgs`} iconName="FileText" color="text-[var(--accent)]" delay={60} />
+        <AnimatedStatCard label="Views Total" value={totalViews.toLocaleString("pt-BR")} iconName="Eye" color="text-cyan-400" delay={120} />
+        <AnimatedStatCard label="Likes Total" value={totalLikes.toLocaleString("pt-BR")} iconName="Heart" color="text-pink-400" delay={180} />
+        <AnimatedStatCard label="Comentários" value={totalComments.toLocaleString("pt-BR")} iconName="MessageSquare" color="text-green-400" delay={240} />
+        <AnimatedStatCard
           label="Eng. Médio"
           value={`${avgEng}%`}
           sub={compAvgEng ? `Concorrentes: ${compAvgEng}%` : undefined}
-          icon={TrendingUp}
+          iconName="TrendingUp"
           color="text-yellow-400"
           trend={avgEng > compAvgEng ? "up" : avgEng < compAvgEng ? "down" : "neutral"}
+          delay={300}
         />
       </div>
 
       {/* KPIs Row 2 — Métricas Premium (Instagram API) */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-4">
-        <StatCard label="Saves Total" value={totalSaves.toLocaleString("pt-BR")} sub="Intenção de compra" icon={CheckCircle} color="text-emerald-400" />
-        <StatCard label="Shares Total" value={totalShares.toLocaleString("pt-BR")} sub="Referência social" icon={ArrowUpRight} color="text-blue-400" />
-        <StatCard label="Alcance Total" value={totalReach.toLocaleString("pt-BR")} sub="Contas únicas" icon={Eye} color="text-orange-400" />
-        <StatCard label="Eng. Vídeos" value={`${engByType("video")}%`} icon={Flame} color="text-orange-400" />
-        <StatCard label="Eng. Carrosséis" value={`${engByType("carousel")}%`} icon={Flame} color="text-blue-400" />
-        <StatCard label="Duração Média" value={`${avgDuration}s`} sub="Vídeos" icon={Clock} color="text-purple-400" />
+        <AnimatedStatCard label="Saves Total" value={totalSaves.toLocaleString("pt-BR")} sub="Intenção de compra" iconName="CheckCircle" color="text-emerald-400" delay={360} />
+        <AnimatedStatCard label="Shares Total" value={totalShares.toLocaleString("pt-BR")} sub="Referência social" iconName="ArrowUpRight" color="text-blue-400" delay={420} />
+        <AnimatedStatCard label="Alcance Total" value={totalReach.toLocaleString("pt-BR")} sub="Contas únicas" iconName="Eye" color="text-orange-400" delay={480} />
+        <AnimatedStatCard label="Eng. Vídeos" value={`${engByType("video")}%`} iconName="Flame" color="text-orange-400" delay={540} />
+        <AnimatedStatCard label="Eng. Carrosséis" value={`${engByType("carousel")}%`} iconName="Flame" color="text-blue-400" delay={600} />
+        <AnimatedStatCard label="Duração Média" value={`${avgDuration}s`} sub="Vídeos" iconName="Clock" color="text-[var(--accent)]" delay={660} />
       </div>
 
       {/* Save Rate indicator */}
@@ -290,7 +274,7 @@ export default async function MeuPerfilPage() {
       )}
 
       {/* CHARTS ROW */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+      <AnimatedSection className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         <div className="glass-card p-6">
           <SectionHeader icon={TrendingUp} title="Performance por Post" color="text-green-400" />
           <PerformanceBar
@@ -311,9 +295,9 @@ export default async function MeuPerfilPage() {
             ]}
           />
         </div>
-      </div>
+      </AnimatedSection>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+      <AnimatedSection className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         {/* Funnel Distribution (detailed) */}
         <div className="glass-card p-6">
           <SectionHeader icon={Target} title="Distribuição de Funil (detalhe)" color="text-[var(--accent)]" />
@@ -377,9 +361,9 @@ export default async function MeuPerfilPage() {
             </div>
           )}
         </div>
-      </div>
+      </AnimatedSection>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+      <AnimatedSection className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         {/* Comment Intent Analysis */}
         <div className="glass-card p-6">
           <SectionHeader icon={MessageSquare} title="Intenção dos Comentários" color="text-green-400" />
@@ -431,10 +415,10 @@ export default async function MeuPerfilPage() {
             </div>
           )}
         </div>
-      </div>
+      </AnimatedSection>
 
       {/* Top and Bottom Performers side by side */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+      <AnimatedSection className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         {/* Top 5 */}
         <div className="glass-card">
           <div className="p-4 border-b border-[var(--border)]">
@@ -497,11 +481,11 @@ export default async function MeuPerfilPage() {
             ))}
           </div>
         </div>
-      </div>
+      </AnimatedSection>
 
       {/* My Best Hooks */}
       {hooks && hooks.length > 0 && (
-        <div className="glass-card mb-8">
+        <AnimatedSection className="glass-card mb-8">
           <div className="p-6 border-b border-[var(--border)]">
             <SectionHeader icon={Zap} title="Meus Melhores Hooks" color="text-yellow-400" />
           </div>
@@ -527,12 +511,12 @@ export default async function MeuPerfilPage() {
               </div>
             ))}
           </div>
-        </div>
+        </AnimatedSection>
       )}
 
       {/* Competitor Benchmark */}
       {competitors && competitors.length > 0 && (
-        <div className="glass-card p-6 mb-8">
+        <AnimatedSection className="glass-card p-6 mb-8">
           <SectionHeader icon={Shield} title="Benchmark vs Concorrentes" color="text-cyan-400" />
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -572,12 +556,12 @@ export default async function MeuPerfilPage() {
               </tbody>
             </table>
           </div>
-        </div>
+        </AnimatedSection>
       )}
 
       {/* Strategic Insights from Analysis */}
       {analysis?.full_analysis && (
-        <div className="glass-card">
+        <AnimatedSection className="glass-card">
           <div className="p-6 border-b border-[var(--border)] flex items-center justify-between">
             <SectionHeader icon={Lightbulb} title="Diagnóstico Estratégico Completo" color="text-yellow-400" />
             <span className="text-xs text-[var(--muted-foreground)]">
@@ -588,7 +572,7 @@ export default async function MeuPerfilPage() {
             className="p-6 prose prose-invert prose-sm max-w-none [&_h1]:text-xl [&_h1]:font-bold [&_h1]:mt-6 [&_h1]:mb-3 [&_h2]:text-lg [&_h2]:font-semibold [&_h2]:mt-5 [&_h2]:mb-2 [&_h3]:text-base [&_h3]:font-medium [&_h3]:mt-4 [&_h3]:mb-2 [&_table]:w-full [&_table]:text-xs [&_th]:text-left [&_th]:p-2 [&_th]:border-b [&_th]:border-[var(--border)] [&_td]:p-2 [&_td]:border-b [&_td]:border-[var(--border)] [&_code]:bg-[var(--muted)] [&_code]:px-1 [&_code]:rounded [&_li]:my-0.5 [&_strong]:text-[var(--foreground)]"
             dangerouslySetInnerHTML={{ __html: markdownToHtml(analysis.full_analysis) }}
           />
-        </div>
+        </AnimatedSection>
       )}
     </div>
   );

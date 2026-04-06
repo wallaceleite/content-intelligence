@@ -126,11 +126,12 @@ export async function POST(req: NextRequest) {
 
     // 5. Pull audience demographics in parallel
     let demoSynced = 0;
+    const igUserId = profileData.id;
     try {
       const demoResults = await Promise.allSettled(
         ["age", "gender", "city", "country"].map(async (metricType) => {
           const demoData = await igFetch(
-            `${IG_API}/me/insights?metric=follower_demographics&period=lifetime&metric_type=${metricType}`
+            `${IG_API}/${igUserId}/insights?metric=follower_demographics&period=lifetime&metric_type=total_value&breakdown=${metricType}`
           );
 
           if (demoData.data?.[0]?.total_value?.breakdowns?.[0]?.results) {

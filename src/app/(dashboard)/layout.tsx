@@ -7,6 +7,7 @@ const navItems = [
   { href: "/meu-perfil", label: "Meu Perfil", iconName: "Flame", highlight: true },
   { href: "/negocio", label: "Meu Negócio", iconName: "Brain", highlight: true },
   { href: "/estrategia", label: "Estratégia", iconName: "Target", highlight: true },
+  { href: "/gerador", label: "Gerador", iconName: "Sparkles", highlight: true },
   { href: "/profiles", label: "Concorrentes", iconName: "Users" },
   { href: "/hooks", label: "Banco de Hooks", iconName: "Zap" },
   { href: "/calendar", label: "Calendário", iconName: "Calendar" },

@@ -142,9 +142,34 @@ Retorne APENAS um JSON válido, sem markdown:
 
     const cost = ((result.inputTokens / 1_000_000) * 3 + (result.outputTokens / 1_000_000) * 15).toFixed(4);
 
+    // Save to database
+    const { data: saved, error: saveError } = await supabaseAdmin
+      .from("carousels")
+      .insert({
+        template_id: template.id,
+        template_name: template.name,
+        category: category?.name || template.category,
+        category_icon: category?.icon || "",
+        funnel_stage: template.funnelStage,
+        topic: topic.trim(),
+        angle: angle?.trim() || null,
+        custom_context: customContext?.trim() || null,
+        cards: carousel.cards,
+        caption: carousel.caption || null,
+        cta_word: carousel.cta_word || null,
+        suggested_hook: carousel.suggested_hook || null,
+        status: "revisao",
+        cost: `$${cost}`,
+        input_tokens: result.inputTokens,
+        output_tokens: result.outputTokens,
+      })
+      .select()
+      .single();
+
     return NextResponse.json({
       success: true,
       carousel,
+      carouselId: saved?.id || null,
       template: {
         id: template.id,
         name: template.name,

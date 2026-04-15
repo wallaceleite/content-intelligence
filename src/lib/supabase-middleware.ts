@@ -43,8 +43,8 @@ export async function updateSession(request: NextRequest) {
     return supabaseResponse;
   }
 
-  // Allow API routes for webhooks (n8n, etc)
-  if (request.nextUrl.pathname.startsWith("/api/webhook")) {
+  // Allow all API routes (webhooks, analyze, generate, etc)
+  if (request.nextUrl.pathname.startsWith("/api/")) {
     return supabaseResponse;
   }
 

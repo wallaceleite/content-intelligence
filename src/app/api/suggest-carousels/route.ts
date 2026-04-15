@@ -32,52 +32,71 @@ export async function GET() {
       bofu: ideal.bofu - funnelPcts.bofu,
     };
 
-    // 2. Top performing hooks by funnel stage from competitors
-    const { data: topHooksTOFU } = await supabaseAdmin
+    // Helper: cap engagement_rate at 1.0 (100%) to filter inflated data
+    const capEng = (items: any[]) =>
+      items.map((item) => ({
+        ...item,
+        engagement_rate: Math.min(item.engagement_rate || 0, 1),
+      }));
+
+    // 2. Top performing hooks by funnel stage from competitors (filter inflated)
+    const { data: rawHooksTOFU } = await supabaseAdmin
       .from("hooks")
       .select("hook_text, hook_type, engagement_rate, funnel_stage, profiles(username)")
       .eq("funnel_stage", "tofu")
+      .lte("engagement_rate", 1)
       .order("engagement_rate", { ascending: false })
       .limit(5);
+    const topHooksTOFU = rawHooksTOFU || [];
 
-    const { data: topHooksMOFU } = await supabaseAdmin
+    const { data: rawHooksMOFU } = await supabaseAdmin
       .from("hooks")
       .select("hook_text, hook_type, engagement_rate, funnel_stage, profiles(username)")
       .eq("funnel_stage", "mofu")
+      .lte("engagement_rate", 1)
       .order("engagement_rate", { ascending: false })
       .limit(5);
+    const topHooksMOFU = rawHooksMOFU || [];
 
-    const { data: topHooksBOFU } = await supabaseAdmin
+    const { data: rawHooksBOFU } = await supabaseAdmin
       .from("hooks")
       .select("hook_text, hook_type, engagement_rate, funnel_stage, profiles(username)")
       .eq("funnel_stage", "bofu")
+      .lte("engagement_rate", 1)
       .order("engagement_rate", { ascending: false })
       .limit(5);
+    const topHooksBOFU = rawHooksBOFU || [];
 
-    // 3. Top posts with highest engagement per funnel stage (competitor data)
-    const { data: topPostsTOFU } = await supabaseAdmin
+    // 3. Top posts with highest engagement per funnel stage (filter inflated >100%)
+    const { data: rawPostsTOFU } = await supabaseAdmin
       .from("posts")
       .select("hook_text, hook_type, content_theme, engagement_rate, views_count, funnel_stage, caption, profiles(username)")
       .eq("funnel_stage", "tofu")
       .not("hook_text", "is", null)
+      .lte("engagement_rate", 1)
       .order("engagement_rate", { ascending: false })
       .limit(8);
+    const topPostsTOFU = rawPostsTOFU || [];
 
-    const { data: topPostsMOFU } = await supabaseAdmin
+    const { data: rawPostsMOFU } = await supabaseAdmin
       .from("posts")
       .select("hook_text, hook_type, content_theme, engagement_rate, views_count, funnel_stage, caption, profiles(username)")
       .eq("funnel_stage", "mofu")
       .not("hook_text", "is", null)
+      .lte("engagement_rate", 1)
       .order("engagement_rate", { ascending: false })
       .limit(8);
+    const topPostsMOFU = rawPostsMOFU || [];
 
-    const { data: topPostsBOFU } = await supabaseAdmin
+    const { data: rawPostsBOFU } = await supabaseAdmin
       .from("posts")
       .select("hook_text, hook_type, content_theme, engagement_rate, views_count, funnel_stage, caption, profiles(username)")
       .eq("funnel_stage", "bofu")
       .not("hook_text", "is", null)
+      .lte("engagement_rate", 1)
       .order("engagement_rate", { ascending: false })
       .limit(8);
+    const topPostsBOFU = rawPostsBOFU || [];
 
     // 4. Comment intent analysis - what does the audience want?
     const { data: purchaseComments } = await supabaseAdmin
@@ -257,7 +276,7 @@ Retorne APENAS um JSON array válido:
         funnel: funnelPcts,
         gaps: funnelGaps,
         totalPosts: total,
-        competitorHooks: (topHooksTOFU?.length || 0) + (topHooksMOFU?.length || 0) + (topHooksBOFU?.length || 0),
+        competitorHooks: topHooksTOFU.length + topHooksMOFU.length + topHooksBOFU.length,
         commentSignals: {
           purchaseIntent: purchaseComments?.length || 0,
           questions: questionComments?.length || 0,

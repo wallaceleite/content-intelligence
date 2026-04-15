@@ -10,11 +10,15 @@ import {
   ChevronRight,
   ExternalLink,
   Trash2,
-  Eye,
   X,
   RefreshCw,
   Pencil,
   Image,
+  Brain,
+  TrendingUp,
+  Zap,
+  Target,
+  ArrowRight,
 } from "lucide-react";
 import {
   CAROUSEL_TEMPLATES,
@@ -47,6 +51,31 @@ interface CarouselRecord {
   created_at: string;
 }
 
+interface Suggestion {
+  templateId: string;
+  templateName: string;
+  funnelStage: string;
+  topic: string;
+  angle: string;
+  priority: string;
+  reasoning: string;
+  inspiredBy: string;
+  expectedImpact: string;
+}
+
+interface SuggestionContext {
+  funnel: { tofu: number; mofu: number; bofu: number };
+  gaps: { tofu: number; mofu: number; bofu: number };
+  totalPosts: number;
+  competitorHooks: number;
+  commentSignals: {
+    purchaseIntent: number;
+    questions: number;
+    objections: number;
+    audienceVoice: number;
+  };
+}
+
 type Tab = "gerar" | "kanban";
 
 const KANBAN_COLUMNS = [
@@ -76,6 +105,43 @@ export default function GeradorPage() {
   const [editingCaption, setEditingCaption] = useState<string>("");
   const [rejectionNote, setRejectionNote] = useState("");
   const [showRejectModal, setShowRejectModal] = useState<string | null>(null);
+
+  // Suggestions state
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [suggestionsContext, setSuggestionsContext] = useState<SuggestionContext | null>(null);
+  const [suggestionsLoading, setSuggestionsLoading] = useState(false);
+  const [suggestionsLoaded, setSuggestionsLoaded] = useState(false);
+  const [suggestionsCost, setSuggestionsCost] = useState<string | null>(null);
+
+  const loadSuggestions = useCallback(async () => {
+    setSuggestionsLoading(true);
+    try {
+      const res = await fetch("/api/suggest-carousels");
+      const data = await res.json();
+      if (data.suggestions) {
+        setSuggestions(data.suggestions);
+        setSuggestionsContext(data.context);
+        setSuggestionsCost(data.usage?.cost || null);
+        setSuggestionsLoaded(true);
+      }
+    } catch {
+      // ignore
+    } finally {
+      setSuggestionsLoading(false);
+    }
+  }, []);
+
+  const applySuggestion = (s: Suggestion) => {
+    const template = CAROUSEL_TEMPLATES.find((t) => t.id === s.templateId);
+    if (template) {
+      setSelectedTemplate(template);
+      setTopic(s.topic);
+      setAngle(s.angle || "");
+      setCustomContext(s.reasoning);
+      // Expand the category
+      setExpandedCategories(new Set([template.category]));
+    }
+  };
 
   const loadCarousels = useCallback(async () => {
     setKanbanLoading(true);
@@ -251,7 +317,130 @@ export default function GeradorPage() {
 
       {/* TAB: GERAR */}
       {tab === "gerar" && (
-        <div className="grid grid-cols-12 gap-5">
+        <div className="space-y-5">
+          {/* INTELLIGENT SUGGESTIONS */}
+          <div className="glass-card p-4">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <Brain className="w-4 h-4" style={{ color: "var(--accent)" }} />
+                <h2 className="text-sm font-bold">Sugestões Inteligentes</h2>
+                {suggestionsContext && (
+                  <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: "var(--muted)", color: "var(--text-tertiary)" }}>
+                    {suggestionsContext.competitorHooks} hooks &middot; {suggestionsContext.totalPosts} posts analisados
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                {suggestionsCost && (
+                  <span className="text-[10px]" style={{ color: "var(--text-tertiary)" }}>{suggestionsCost}</span>
+                )}
+                <button onClick={loadSuggestions} disabled={suggestionsLoading}
+                  className="text-xs font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all"
+                  style={{ background: suggestionsLoaded ? "var(--muted)" : "var(--accent)", color: suggestionsLoaded ? "var(--text-secondary)" : "var(--accent-foreground)" }}>
+                  {suggestionsLoading ? (
+                    <><Loader2 className="w-3 h-3 animate-spin" /> Analisando dados...</>
+                  ) : suggestionsLoaded ? (
+                    <><RefreshCw className="w-3 h-3" /> Atualizar</>
+                  ) : (
+                    <><Zap className="w-3 h-3" /> Gerar Sugestões com IA</>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Funnel health bar */}
+            {suggestionsContext && (
+              <div className="flex items-center gap-3 mb-3 px-1">
+                <span className="text-[10px] font-semibold" style={{ color: "var(--text-tertiary)" }}>Funil:</span>
+                <div className="flex-1 flex gap-1 h-2 rounded-full overflow-hidden" style={{ background: "var(--muted)" }}>
+                  <div style={{ width: `${suggestionsContext.funnel.tofu}%`, background: "#00E5CC" }} className="rounded-l-full" />
+                  <div style={{ width: `${suggestionsContext.funnel.mofu}%`, background: "#FFB800" }} />
+                  <div style={{ width: `${suggestionsContext.funnel.bofu}%`, background: "#FF6B6B" }} className="rounded-r-full" />
+                </div>
+                <div className="flex gap-3 text-[10px]" style={{ color: "var(--text-tertiary)" }}>
+                  <span>TOFU {suggestionsContext.funnel.tofu}%
+                    {suggestionsContext.gaps.tofu > 5 && <span style={{ color: "#FF6B6B" }}> ({suggestionsContext.gaps.tofu > 0 ? "+" : ""}{suggestionsContext.gaps.tofu})</span>}
+                  </span>
+                  <span>MOFU {suggestionsContext.funnel.mofu}%
+                    {suggestionsContext.gaps.mofu > 5 && <span style={{ color: "#FF6B6B" }}> ({suggestionsContext.gaps.mofu > 0 ? "+" : ""}{suggestionsContext.gaps.mofu})</span>}
+                  </span>
+                  <span>BOFU {suggestionsContext.funnel.bofu}%
+                    {suggestionsContext.gaps.bofu > 5 && <span style={{ color: "#FF6B6B" }}> ({suggestionsContext.gaps.bofu > 0 ? "+" : ""}{suggestionsContext.gaps.bofu})</span>}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* Comment signals */}
+            {suggestionsContext && suggestionsContext.commentSignals.purchaseIntent > 0 && (
+              <div className="flex gap-3 mb-3 text-[10px]" style={{ color: "var(--text-tertiary)" }}>
+                <span>🛒 {suggestionsContext.commentSignals.purchaseIntent} sinais de compra</span>
+                <span>❓ {suggestionsContext.commentSignals.questions} perguntas</span>
+                <span>🚫 {suggestionsContext.commentSignals.objections} objeções</span>
+                <span>💬 {suggestionsContext.commentSignals.audienceVoice} dores da audiência</span>
+              </div>
+            )}
+
+            {/* Suggestions list */}
+            {!suggestionsLoaded && !suggestionsLoading && (
+              <p className="text-xs text-center py-4" style={{ color: "var(--text-tertiary)" }}>
+                Clique em "Gerar Sugestões com IA" para analisar seus dados e receber recomendações personalizadas
+              </p>
+            )}
+
+            {suggestions.length > 0 && (
+              <div className="space-y-2">
+                {suggestions.map((s, i) => (
+                  <div key={i} className="rounded-xl p-3 flex gap-3 transition-all hover:opacity-90 cursor-pointer group"
+                    style={{ background: "var(--muted)", border: "1px solid var(--border-glass)" }}
+                    onClick={() => applySuggestion(s)}>
+                    {/* Priority + funnel badge */}
+                    <div className="flex flex-col items-center gap-1 pt-0.5 shrink-0">
+                      <span className="text-lg font-bold" style={{ color: "var(--text-tertiary)" }}>#{i + 1}</span>
+                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded"
+                        style={{ background: funnelColor(s.funnelStage) + "20", color: funnelColor(s.funnelStage) }}>
+                        {funnelLabel(s.funnelStage)}
+                      </span>
+                      {s.priority === "alta" && (
+                        <TrendingUp className="w-3 h-3 mt-0.5" style={{ color: "#FF6B6B" }} />
+                      )}
+                    </div>
+                    {/* Content */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="text-xs font-bold truncate">{s.topic}</h3>
+                        <span className="text-[10px] shrink-0 px-1.5 py-0.5 rounded" style={{ background: "var(--background)", color: "var(--text-tertiary)" }}>
+                          {s.templateName}
+                        </span>
+                      </div>
+                      {s.angle && (
+                        <p className="text-[10px] mb-1" style={{ color: "var(--text-secondary)" }}>
+                          <span className="font-semibold">Ângulo:</span> {s.angle}
+                        </p>
+                      )}
+                      <p className="text-[10px] leading-relaxed" style={{ color: "var(--text-tertiary)" }}>
+                        <span className="font-semibold" style={{ color: "var(--accent)" }}>Por quê:</span> {s.reasoning}
+                      </p>
+                      {s.inspiredBy && (
+                        <p className="text-[10px] mt-1" style={{ color: "var(--text-tertiary)" }}>
+                          <span className="font-semibold">Inspirado em:</span> {s.inspiredBy}
+                        </p>
+                      )}
+                    </div>
+                    {/* Use button */}
+                    <div className="shrink-0 flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <span className="text-[10px] font-semibold flex items-center gap-1 px-3 py-1.5 rounded-lg"
+                        style={{ background: "var(--accent)", color: "var(--accent-foreground)" }}>
+                        Usar <ArrowRight className="w-3 h-3" />
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="grid grid-cols-12 gap-5">
           {/* Template selector */}
           <div className="col-span-4 space-y-1.5">
             <h2 className="text-xs font-semibold mb-2" style={{ color: "var(--text-secondary)" }}>
@@ -410,6 +599,7 @@ export default function GeradorPage() {
               </div>
             )}
           </div>
+        </div>
         </div>
       )}
 

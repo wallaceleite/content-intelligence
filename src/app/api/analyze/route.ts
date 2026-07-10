@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { classifyPost, classifyComments } from "@/lib/classifier";
-import { analyzeWithSonnet } from "@/lib/anthropic";
+import { analyzeWithSonnet, estimateCost, MODELS } from "@/lib/anthropic";
 import { extractCarouselText } from "@/lib/carousel-ocr";
 import { buildAnalysisPrompt, ANALYSIS_SYSTEM_PROMPT } from "@/lib/prompts";
 
@@ -245,10 +245,11 @@ export async function POST(req: NextRequest) {
     const result = await analyzeWithSonnet(ANALYSIS_SYSTEM_PROMPT, prompt);
 
     // 7. Save analysis
-    // Sonnet 4.6 pricing: $3/1M input, $15/1M output
-    const costEstimate =
-      (result.inputTokens / 1_000_000) * 3 +
-      (result.outputTokens / 1_000_000) * 15;
+    const costEstimate = estimateCost(
+      MODELS.generate,
+      result.inputTokens,
+      result.outputTokens
+    );
 
     const { data: analysis } = await supabaseAdmin
       .from("analyses")
@@ -276,10 +277,10 @@ export async function POST(req: NextRequest) {
             views: p.views_count,
             funnelStage: p.funnel_stage,
           })),
-        model_used: "claude-sonnet-4-6-20250610",
+        model_used: MODELS.generate,
         input_tokens: result.inputTokens,
         output_tokens: result.outputTokens,
-        cost_estimate: Math.round(costEstimate * 10000) / 10000,
+        cost_estimate: costEstimate,
       })
       .select()
       .single();

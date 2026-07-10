@@ -1,4 +1,5 @@
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import GeneratePlanButton from "@/components/dashboard/GeneratePlanButton";
 import {
   Target, AlertTriangle, CheckCircle, XCircle, Clock, Flame,
   TrendingUp, Calendar, BarChart3, Zap, ArrowRight, Shield,
@@ -39,11 +40,11 @@ export default async function EstrategiaPage() {
     .eq("username", MY_USERNAME)
     .single();
 
-  // Get benchmarks
+  // Get benchmarks (ordenado por key — a coluna "category" não existe no schema)
   const { data: benchmarks } = await supabaseAdmin
     .from("strategy_benchmarks")
     .select("*")
-    .order("category");
+    .order("key");
 
   const getBenchmark = (key: string) => benchmarks?.find((b) => b.key === key);
 
@@ -379,12 +380,19 @@ export default async function EstrategiaPage() {
             Benchmarks de Mercado (fonte: @rafaelkiso / mLabs)
           </h2>
         </div>
+        {!benchmarks?.length && (
+          <div className="p-6 text-center text-sm text-[var(--muted-foreground)]">
+            Nenhum benchmark cadastrado ainda. Rode a migração de seed em supabase/migrations.
+          </div>
+        )}
         <div className="divide-y divide-[var(--border)]">
           {(benchmarks || []).map((b) => (
             <div key={b.id} className="p-4 flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium">{b.label}</p>
-                <p className="text-xs text-[var(--muted-foreground)]">{b.description}</p>
+                {b.description && (
+                  <p className="text-xs text-[var(--muted-foreground)]">{b.description}</p>
+                )}
               </div>
               <div className="text-right shrink-0 ml-4">
                 <span className="text-lg font-bold text-[var(--accent)]">{b.value}</span>
@@ -401,10 +409,11 @@ export default async function EstrategiaPage() {
           <h2 className="font-semibold flex items-center gap-2">
             <Calendar className="w-4 h-4 text-green-400" />
             Plano da Semana
+            <span className="text-xs font-normal text-[var(--muted-foreground)]">
+              ({planItems?.length || 0} itens)
+            </span>
           </h2>
-          <span className="text-xs text-[var(--muted-foreground)]">
-            {planItems?.length || 0} itens planejados
-          </span>
+          <GeneratePlanButton />
         </div>
         {!planItems?.length ? (
           <div className="p-8 text-center">

@@ -1,6 +1,36 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
-import { analyzeWithSonnet } from "@/lib/anthropic";
+import { generateJSON } from "@/lib/anthropic";
+
+const SUGGESTIONS_SCHEMA = {
+  type: "object",
+  additionalProperties: false,
+  required: ["suggestions"],
+  properties: {
+    suggestions: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        required: [
+          "templateId", "templateName", "funnelStage", "topic", "angle",
+          "priority", "reasoning", "inspiredBy", "expectedImpact",
+        ],
+        properties: {
+          templateId: { type: "string" },
+          templateName: { type: "string" },
+          funnelStage: { type: "string", enum: ["tofu", "mofu", "bofu"] },
+          topic: { type: "string" },
+          angle: { type: "string" },
+          priority: { type: "string", enum: ["alta", "media"] },
+          reasoning: { type: "string" },
+          inspiredBy: { type: "string" },
+          expectedImpact: { type: "string" },
+        },
+      },
+    },
+  },
+} as const;
 import { CAROUSEL_TEMPLATES, CAROUSEL_CATEGORIES } from "@/lib/carousel-templates";
 
 export const maxDuration = 120;
@@ -25,7 +55,17 @@ export async function GET() {
       mofu: Math.round((ownFunnel.mofu / total) * 100),
       bofu: Math.round((ownFunnel.bofu / total) * 100),
     };
-    const ideal = { tofu: 50, mofu: 35, bofu: 15 };
+    // Funil ideal configurável via strategy_benchmarks (fallback 50/35/15)
+    const { data: idealRows } = await supabaseAdmin
+      .from("strategy_benchmarks")
+      .select("key, value")
+      .in("key", ["ideal_tofu", "ideal_mofu", "ideal_bofu"]);
+    const idealMap = Object.fromEntries((idealRows || []).map((r) => [r.key, Number(r.value)]));
+    const ideal = {
+      tofu: idealMap.ideal_tofu || 50,
+      mofu: idealMap.ideal_mofu || 35,
+      bofu: idealMap.ideal_bofu || 15,
+    };
     const funnelGaps = {
       tofu: ideal.tofu - funnelPcts.tofu,
       mofu: ideal.mofu - funnelPcts.mofu,
@@ -184,7 +224,7 @@ export async function GET() {
 
 ## SAÚDE DO FUNIL DO @owallaceleite
 Distribuição atual: TOFU ${funnelPcts.tofu}% | MOFU ${funnelPcts.mofu}% | BOFU ${funnelPcts.bofu}%
-Ideal: TOFU 50% | MOFU 35% | BOFU 15%
+Ideal: TOFU ${ideal.tofu}% | MOFU ${ideal.mofu}% | BOFU ${ideal.bofu}%
 Gaps: TOFU ${funnelGaps.tofu > 0 ? "+" : ""}${funnelGaps.tofu}pp | MOFU ${funnelGaps.mofu > 0 ? "+" : ""}${funnelGaps.mofu}pp | BOFU ${funnelGaps.bofu > 0 ? "+" : ""}${funnelGaps.bofu}pp
 
 ## TOP POSTS CONCORRENTES — TOFU (Atração)
@@ -239,36 +279,18 @@ ${templatesRef}
 6. NÃO repita temas de carrosséis já gerados
 7. Ordene por prioridade (o mais urgente/impactante primeiro)
 
-## FORMATO DE SAÍDA
-Retorne APENAS um JSON array válido:
-[
-  {
-    "templateId": "id-exato-do-template",
-    "templateName": "Nome do Template",
-    "funnelStage": "tofu|mofu|bofu",
-    "topic": "tema específico e direto do carrossel",
-    "angle": "ângulo/abordagem específica",
-    "priority": "alta|media",
-    "reasoning": "justificativa baseada nos dados (cite métricas, hooks, comentários)",
-    "inspiredBy": "qual post/hook/comentário inspirou esta sugestão",
-    "expectedImpact": "que resultado esperar deste carrossel"
-  }
-]`;
+Retorne exatamente 5 sugestões, ordenadas por prioridade. reasoning deve citar métricas/hooks/comentários reais; inspiredBy nomeia o post/hook/comentário que inspirou; expectedImpact descreve o resultado esperado.`;
 
-    const result = await analyzeWithSonnet(
-      `Você é um estrategista de conteúdo sênior que analisa dados de performance de Instagram para gerar recomendações acionáveis. Você cruza dados de engajamento, classificação de funil, análise de comentários e inteligência competitiva para sugerir os carrosséis com maior probabilidade de resultado. Responda APENAS com JSON válido.`,
-      prompt
-    );
+    const { data: output, usage } = await generateJSON<{ suggestions: any[] }>({
+      system: `Você é um estrategista de conteúdo sênior que analisa dados de performance de Instagram para gerar recomendações acionáveis. Você cruza dados de engajamento, classificação de funil, análise de comentários e inteligência competitiva para sugerir os carrosséis com maior probabilidade de resultado.`,
+      prompt,
+      schema: SUGGESTIONS_SCHEMA as unknown as Record<string, unknown>,
+      maxTokens: 6000,
+    });
+    const suggestions = output.suggestions;
 
-    let suggestions: any[];
-    try {
-      const jsonMatch = result.text.match(/\[[\s\S]*\]/);
-      suggestions = jsonMatch ? JSON.parse(jsonMatch[0]) : [];
-    } catch {
-      return NextResponse.json({ error: "Parse error", raw: result.text.slice(0, 500) }, { status: 500 });
-    }
-
-    const cost = ((result.inputTokens / 1_000_000) * 3 + (result.outputTokens / 1_000_000) * 15).toFixed(4);
+    const cost = usage.cost.toFixed(4);
+    const result = { inputTokens: usage.inputTokens, outputTokens: usage.outputTokens };
 
     return NextResponse.json({
       suggestions,

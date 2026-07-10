@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { calculateDerivedMetrics } from "@/lib/metrics";
+import { isWebhookAuthorized } from "@/lib/webhook-auth";
 
 // Receives scraped data from n8n after Apify + filtering
 export async function POST(req: NextRequest) {
+  if (!isWebhookAuthorized(req)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
   try {
     const body = await req.json();
     const { batchId, posts, profile, minViews, minEngagement, topN, observacaoEstrategica } = body;

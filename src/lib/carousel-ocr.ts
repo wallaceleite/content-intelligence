@@ -1,4 +1,4 @@
-import { anthropic } from "./anthropic";
+import { anthropic, MODELS } from "./anthropic";
 
 // Extract text from carousel images using Claude Vision
 export async function extractCarouselText(
@@ -6,13 +6,14 @@ export async function extractCarouselText(
 ): Promise<string> {
   if (!imageUrls?.length) return "";
 
-  // Take up to 5 images (carousel max is usually 10, but 5 is enough)
-  const urls = imageUrls.slice(0, 5);
+  // Carrosséis vão até 10 slides — os templates CQV usam 7-10 cards,
+  // então cortar em 5 perdia a aterrissagem de produto e o CTA.
+  const urls = imageUrls.slice(0, 10);
 
   const content: any[] = [
     {
       type: "text",
-      text: "Extraia TODO o texto visível de cada slide deste carrossel do Instagram. Retorne apenas o texto puro de cada slide separado por '---'. Sem explicações.",
+      text: "Extraia TODO o texto visível de cada slide deste carrossel do Instagram, NA ORDEM. Formato: 'SLIDE 1: <texto>' e assim por diante, separados por '---'. Apenas o texto puro, sem explicações.",
     },
   ];
 
@@ -25,8 +26,8 @@ export async function extractCarouselText(
 
   try {
     const response = await anthropic.messages.create({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 2000,
+      model: MODELS.classify,
+      max_tokens: 4000,
       messages: [{ role: "user", content }],
     });
 

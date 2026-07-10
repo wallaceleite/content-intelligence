@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { isWebhookAuthorized } from "@/lib/webhook-auth";
 
 // Receives transcription webhook from AssemblyAI (via n8n)
 export async function POST(req: NextRequest) {
+  if (!isWebhookAuthorized(req)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
   try {
     const body = await req.json();
     const { postId, batchId, transcript } = body;

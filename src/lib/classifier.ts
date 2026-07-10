@@ -43,11 +43,18 @@ Responda com este JSON exato (preencha os valores):
 {"funnelStage":"tofu","hookType":"curiosidade","hookText":"texto dos primeiros 3 segundos","ctaType":"none","ctaText":"","contentTheme":"tema em 3 palavras"}
 
 Valores permitidos:
-- funnelStage: "tofu" (conteúdo amplo, viral, atrai novos), "mofu" (ensina, prova, educa), "bofu" (vende, CTA direto, oferta)
+- funnelStage: "tofu" (conteúdo amplo, viral, atrai novos), "mofu" (ensina, prova, educa), "bofu" (vende, CTA direto, oferta). Desempate: se ensina algo específico do nicho = mofu; se menciona produto/oferta/vaga = bofu; na dúvida = tofu
 - hookType: "pergunta", "afirmacao_chocante", "curiosidade", "controversia", "promessa", "historia", "pattern_interrupt", "dado_estatistico"
 - ctaType: "none", "soft" (seguir/salvar/compartilhar), "medium" (link bio/DM), "hard" (compre/vagas limitadas)
 - hookText: copie o texto EXATO dos primeiros 2-3 segundos da transcrição ou primeira linha da legenda
-- contentTheme: o tema principal em 2-3 palavras`;
+- contentTheme: o tema principal em 2-3 palavras
+
+Exemplos de calibração de hookType (não confunda):
+- "Você sabia que 90% dos perfis morrem no primeiro ano?" → dado_estatistico (tem número/dado), NÃO pergunta
+- "Nutricionista está roubando seu dinheiro" → controversia (ataca grupo/consenso), NÃO afirmacao_chocante
+- "Eu perdi 50 mil reais em 3 meses e vou te mostrar por quê" → historia (narrativa pessoal), NÃO promessa
+- "Ninguém te conta isso sobre tráfego pago" → curiosidade (abre lacuna sem atacar ninguém)
+- "Pare de postar todo dia" → pattern_interrupt (ordem contraintuitiva imediata)`;
 
   const result = await classifyWithHaiku(system, prompt);
 

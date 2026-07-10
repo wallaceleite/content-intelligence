@@ -1,6 +1,35 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
-import { analyzeWithSonnet } from "@/lib/anthropic";
+import { generateJSON } from "@/lib/anthropic";
+
+const PLAN_SCHEMA = {
+  type: "object",
+  additionalProperties: false,
+  required: ["plan"],
+  properties: {
+    plan: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        required: [
+          "planned_date", "funnel_stage", "content_type", "topic",
+          "hook_angle", "cta_type", "reference_profile", "notes",
+        ],
+        properties: {
+          planned_date: { type: "string", format: "date" },
+          funnel_stage: { type: "string", enum: ["tofu", "mofu", "bofu"] },
+          content_type: { type: "string" },
+          topic: { type: "string" },
+          hook_angle: { type: "string" },
+          cta_type: { type: "string", enum: ["soft", "medium", "hard"] },
+          reference_profile: { type: "string" },
+          notes: { type: "string" },
+        },
+      },
+    },
+  },
+} as const;
 
 export const maxDuration = 120;
 
@@ -93,39 +122,20 @@ ${dates.map((d, i) => `Dia ${i + 1}: ${d} (${new Date(d + "T12:00:00").toLocaleD
 ## REGRAS
 - Mix de funil: ~50% TOFU, ~35% MOFU, ~15% BOFU
 - Pelo menos 1 post BOFU na semana
-- Pelo menos 2 vídeos "como fazer" (82% engajamento)
+- Pelo menos 2 vídeos tipo "como fazer" (formato de maior engajamento comprovado nos benchmarks)
 - Hooks baseados nos melhores dos concorrentes adaptados
 - CTAs variados (soft, medium, hard)
 - Temas alinhados aos pilares de conteúdo do negócio
+- Um item por data listada, content_type entre: reel, carrossel, imagem, story`;
 
-## FORMATO DE SAÍDA
-Retorne APENAS um JSON array válido, sem markdown:
-[
-  {
-    "planned_date": "2026-03-31",
-    "funnel_stage": "tofu",
-    "content_type": "reel",
-    "topic": "tema do post",
-    "hook_angle": "hook sugerido adaptado",
-    "cta_type": "soft",
-    "reference_profile": "perfil de referência",
-    "notes": "nota breve de execução"
-  }
-]`;
-
-    const result = await analyzeWithSonnet(
-      "Você é um social media estrategista. Gere planos de conteúdo acionáveis em JSON. Sem markdown, sem explicação, apenas o JSON array.",
-      prompt
-    );
-
-    // Parse JSON from response
-    let plan: any[];
-    try {
-      const jsonMatch = result.text.match(/\[[\s\S]*\]/);
-      plan = jsonMatch ? JSON.parse(jsonMatch[0]) : [];
-    } catch {
-      return NextResponse.json({ error: "Failed to parse plan", raw: result.text.slice(0, 500) }, { status: 500 });
-    }
+    const { data: output, usage } = await generateJSON<{ plan: any[] }>({
+      system:
+        "Você é um social media estrategista sênior. Gere planos de conteúdo acionáveis e específicos — cada item pronto para ser executado sem pesquisa adicional.",
+      prompt,
+      schema: PLAN_SCHEMA as unknown as Record<string, unknown>,
+      maxTokens: 6000,
+    });
+    const plan = output.plan;
 
     // Save to strategy_plan
     const rows = plan.map((item: any) => ({
@@ -154,7 +164,7 @@ Retorne APENAS um JSON array válido, sem markdown:
     return NextResponse.json({
       success: true,
       days: plan.length,
-      cost: `$${((result.inputTokens / 1_000_000) * 3 + (result.outputTokens / 1_000_000) * 15).toFixed(4)}`,
+      cost: `$${usage.cost.toFixed(4)}`,
     });
   } catch (error: any) {
     console.error("Plan generation error:", error);

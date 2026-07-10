@@ -1,6 +1,39 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
-import { analyzeWithSonnet } from "@/lib/anthropic";
+import { generateJSON } from "@/lib/anthropic";
+
+const CAROUSEL_SCHEMA = {
+  type: "object",
+  additionalProperties: false,
+  required: ["title", "caption", "cards", "cta_word", "suggested_hook"],
+  properties: {
+    title: { type: "string" },
+    caption: { type: "string" },
+    cards: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        required: ["number", "label", "text"],
+        properties: {
+          number: { type: "integer" },
+          label: { type: "string" },
+          text: { type: "string" },
+        },
+      },
+    },
+    cta_word: { type: "string" },
+    suggested_hook: { type: "string" },
+  },
+} as const;
+
+interface CarouselOutput {
+  title: string;
+  caption: string;
+  cards: { number: number; label: string; text: string }[];
+  cta_word: string;
+  suggested_hook: string;
+}
 import { CAROUSEL_TEMPLATES, CAROUSEL_CATEGORIES } from "@/lib/carousel-templates";
 
 export const maxDuration = 120;
@@ -103,44 +136,17 @@ ${insightSnippet || "Não disponível"}
 6. Use dados, exemplos reais ou referências quando possível
 7. Cada card deve ter no máximo 3-4 linhas (carrossel é visual, texto curto)
 
-## FORMATO DE SAÍDA
-Retorne APENAS um JSON válido, sem markdown:
-{
-  "title": "título do carrossel (headline do card 1)",
-  "caption": "legenda completa para o post (2-3 parágrafos + hashtags)",
-  "cards": [
-    {
-      "number": 1,
-      "label": "CAPA",
-      "text": "texto completo do card"
-    }
-  ],
-  "cta_word": "palavra do CTA para comentários",
-  "suggested_hook": "hook sugerido baseado nos melhores dos concorrentes"
-}`;
+Campos esperados: title (headline do card 1), caption (legenda completa, 2-3 parágrafos + hashtags), cards (todos os ${template.cardCount}), cta_word (palavra do CTA para comentários), suggested_hook (baseado nos melhores dos concorrentes).`;
 
-    const result = await analyzeWithSonnet(
-      `Você é um copywriter estratégico especialista em carrosséis para Instagram. Você domina a metodologia "Carrosséis que Vendem" e adapta cada modelo ao posicionamento único do cliente. Gere carrosséis prontos para publicar, com texto final — sem placeholders, sem [BRACKETS]. Responda APENAS com JSON válido.`,
-      prompt
-    );
+    const { data: carousel, usage } = await generateJSON<CarouselOutput>({
+      system: `Você é um copywriter estratégico especialista em carrosséis para Instagram. Metodologia "Carrosséis que Vendem": 1 única ideia central por carrossel; cada tela segue AIDA e empurra para a próxima; pílulas de conhecimento (nunca o "curso inteiro" numa tela); penúltima tela aterrissa o produto/perfil; última tela tem CTA claro e específico. Teste da eliminação: se remover uma tela e a ideia continuar clara, a tela era desnecessária. Gere texto final pronto pra publicar — sem placeholders, sem [BRACKETS].`,
+      prompt,
+      schema: CAROUSEL_SCHEMA as unknown as Record<string, unknown>,
+      maxTokens: 6000,
+    });
 
-    // Parse JSON
-    let carousel: any;
-    try {
-      const jsonMatch = result.text.match(/\{[\s\S]*\}/);
-      carousel = jsonMatch ? JSON.parse(jsonMatch[0]) : null;
-    } catch {
-      return NextResponse.json(
-        { error: "Falha ao parsear resposta", raw: result.text.slice(0, 500) },
-        { status: 500 }
-      );
-    }
-
-    if (!carousel) {
-      return NextResponse.json({ error: "Resposta vazia" }, { status: 500 });
-    }
-
-    const cost = ((result.inputTokens / 1_000_000) * 3 + (result.outputTokens / 1_000_000) * 15).toFixed(4);
+    const cost = usage.cost.toFixed(4);
+    const result = { inputTokens: usage.inputTokens, outputTokens: usage.outputTokens };
 
     // Save to database
     const { data: saved, error: saveError } = await supabaseAdmin

@@ -80,8 +80,19 @@ function round(n: number, decimals: number): number {
   return Math.round(n * f) / f;
 }
 
+// Fórmula única de engajamento — mesma base do calculateDerivedMetrics
+// (inclui shares e saves quando disponíveis), para nunca haver dois
+// "engagement rate" divergentes no sistema.
+function engagementOf(
+  p: { views: number; likes: number; comments: number; shares?: number; saves?: number },
+  followersCount: number
+): number {
+  const base = getBaseMetric(p.views, followersCount, p.likes);
+  return ((p.likes + p.comments + (p.shares || 0) + (p.saves || 0)) / base) * 100;
+}
+
 export function filterAndRankPosts<
-  T extends { views: number; likes: number; comments: number }
+  T extends { views: number; likes: number; comments: number; shares?: number; saves?: number }
 >(
   posts: T[],
   minViews: number,
@@ -89,20 +100,14 @@ export function filterAndRankPosts<
   topN?: number,
   followersCount: number = 0
 ): T[] {
-  let filtered = posts.filter((p) => {
-    const base = getBaseMetric(p.views, followersCount, p.likes);
-    const engagement = ((p.likes + p.comments) / base) * 100;
-    return p.views >= minViews && engagement >= minEngagement;
-  });
+  let filtered = posts.filter(
+    (p) => p.views >= minViews && engagementOf(p, followersCount) >= minEngagement
+  );
 
   // Sort by engagement rate descending
-  filtered.sort((a, b) => {
-    const baseA = getBaseMetric(a.views, followersCount, a.likes);
-    const baseB = getBaseMetric(b.views, followersCount, b.likes);
-    const ea = ((a.likes + a.comments) / baseA) * 100;
-    const eb = ((b.likes + b.comments) / baseB) * 100;
-    return eb - ea;
-  });
+  filtered.sort(
+    (a, b) => engagementOf(b, followersCount) - engagementOf(a, followersCount)
+  );
 
   if (topN && topN > 0) {
     filtered = filtered.slice(0, topN);

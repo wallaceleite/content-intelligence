@@ -6,12 +6,20 @@ function truncate(text: string, maxChars: number): string {
 }
 
 function extractJson(text: string): string {
-  // Try to find JSON in the response (handles markdown code blocks, extra text, etc.)
-  const jsonMatch = text.match(/\{[\s\S]*\}/);
-  if (jsonMatch) return jsonMatch[0];
-  const arrayMatch = text.match(/\[[\s\S]*\]/);
-  if (arrayMatch) return arrayMatch[0];
-  return text;
+  // Remove cercas de markdown (```json ... ```) que o modelo emite mesmo instruído a não usar
+  const clean = text.replace(/```(?:json)?/gi, "").trim();
+  // O que vier PRIMEIRO no texto (array ou objeto) define o tipo —
+  // testar objeto antes de array quebrava arrays: \{[\s\S]*\} casava
+  // do primeiro { ao último }, produzindo JSON inválido.
+  const arrStart = clean.indexOf("[");
+  const objStart = clean.indexOf("{");
+  if (arrStart !== -1 && (objStart === -1 || arrStart < objStart)) {
+    const m = clean.match(/\[[\s\S]*\]/);
+    if (m) return m[0];
+  }
+  const m = clean.match(/\{[\s\S]*\}/);
+  if (m) return m[0];
+  return clean;
 }
 
 export async function classifyPost(post: {

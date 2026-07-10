@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { generateJSON } from "@/lib/anthropic";
+import { getBrandVoice } from "@/lib/brand-voice";
 
 const CAROUSEL_SCHEMA = {
   type: "object",
@@ -138,8 +139,9 @@ ${insightSnippet || "Não disponível"}
 
 Campos esperados: title (headline do card 1), caption (legenda completa, 2-3 parágrafos + hashtags), cards (todos os ${template.cardCount}), cta_word (palavra do CTA para comentários), suggested_hook (baseado nos melhores dos concorrentes).`;
 
+    const voice = await getBrandVoice();
     const { data: carousel, usage } = await generateJSON<CarouselOutput>({
-      system: `Você é um copywriter estratégico especialista em carrosséis para Instagram. Metodologia "Carrosséis que Vendem": 1 única ideia central por carrossel; cada tela segue AIDA e empurra para a próxima; pílulas de conhecimento (nunca o "curso inteiro" numa tela); penúltima tela aterrissa o produto/perfil; última tela tem CTA claro e específico. Teste da eliminação: se remover uma tela e a ideia continuar clara, a tela era desnecessária. Gere texto final pronto pra publicar — sem placeholders, sem [BRACKETS].`,
+      system: `Você é um copywriter estratégico especialista em carrosséis para Instagram. Metodologia "Carrosséis que Vendem": 1 única ideia central por carrossel; cada tela segue AIDA e empurra para a próxima; pílulas de conhecimento (nunca o "curso inteiro" numa tela); penúltima tela aterrissa o produto/perfil; última tela tem CTA claro e específico. Teste da eliminação: se remover uma tela e a ideia continuar clara, a tela era desnecessária. Gere texto final pronto pra publicar — sem placeholders, sem [BRACKETS].\n\n${voice}`,
       prompt,
       schema: CAROUSEL_SCHEMA as unknown as Record<string, unknown>,
       maxTokens: 6000,

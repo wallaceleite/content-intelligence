@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart3, Users, Zap, Calendar, FileText, Flame, Target, Brain, Sparkles } from "lucide-react";
+import { BarChart3, Users, Zap, Calendar, FileText, Flame, Target, Brain, Sparkles, Compass } from "lucide-react";
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
-  Flame, Brain, Target, Sparkles, Users, Zap, Calendar, FileText,
+  Flame, Brain, Target, Sparkles, Users, Zap, Calendar, FileText, Compass,
 };
 
 export function NavLink({ href, label, iconName, highlight }: {

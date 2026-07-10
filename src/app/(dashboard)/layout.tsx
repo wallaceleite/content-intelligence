@@ -4,6 +4,7 @@ import { NavLink } from "./nav-link";
 import Link from "next/link";
 
 const navItems = [
+  { href: "/direcao", label: "Direção", iconName: "Compass", highlight: true },
   { href: "/meu-perfil", label: "Meu Perfil", iconName: "Flame", highlight: true },
   { href: "/negocio", label: "Meu Negócio", iconName: "Brain", highlight: true },
   { href: "/estrategia", label: "Estratégia", iconName: "Target", highlight: true },

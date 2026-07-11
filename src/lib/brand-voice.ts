@@ -10,7 +10,7 @@ export async function getBrandVoice(): Promise<string> {
     .select("section, data")
     .in("section", [
       "dna_posicionamento", "dna_promessa", "dna_duas_palavras",
-      "dna_atributos", "dna_narrativa", "dna_verbal",
+      "dna_atributos", "dna_narrativa", "dna_verbal", "voz_wallace",
       "produto", "avatar", "posicionamento", "metas",
     ]);
 
@@ -38,6 +38,12 @@ TOM: ${verbal.tom || "direto, de igual pra igual"}. Ritmo: ${verbal.ritmo || "fr
 SEMPRE: ${(verbal.faz || []).join("; ")}
 NUNCA: ${(verbal.nao_faz || []).join("; ")}
 LINHA EDITORIAL: ${verbal.linha_editorial || ""}
+
+${dna.voz_wallace ? `## VOZ REAL EXTRAÍDA DOS POSTS DELE (fonte primária — imite ISTO)
+Léxico que ele usa: ${(dna.voz_wallace.lexico || []).join(", ")}
+Construções dele: ${(dna.voz_wallace.construcoes_frase || []).map((c: string) => `\n- ${c}`).join("")}
+Cadência: ${dna.voz_wallace.cadencia || ""}
+Soaria FALSO na boca dele: ${(dna.voz_wallace.evitar || []).map((c: string) => `\n- ${c}`).join("")}` : ""}
 
 ${dna.produto ? `PRODUTO/OFERTA ATUAL: ${JSON.stringify(dna.produto)}` : ""}
 ${dna.metas ? `METAS: ${JSON.stringify(dna.metas)}` : ""}`;

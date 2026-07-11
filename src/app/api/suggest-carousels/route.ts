@@ -76,7 +76,7 @@ export async function GET() {
     const capEng = (items: any[]) =>
       items.map((item) => ({
         ...item,
-        engagement_rate: Math.min(item.engagement_rate || 0, 1),
+        engagement_rate: Math.min(item.engagement_rate || 0, 100),
       }));
 
     // 2. Top performing hooks by funnel stage from competitors (filter inflated)
@@ -84,7 +84,7 @@ export async function GET() {
       .from("hooks")
       .select("hook_text, hook_type, engagement_rate, funnel_stage, profiles(username)")
       .eq("funnel_stage", "tofu")
-      .lte("engagement_rate", 1)
+      .lte("engagement_rate", 100)
       .order("engagement_rate", { ascending: false })
       .limit(5);
     const topHooksTOFU = rawHooksTOFU || [];
@@ -93,7 +93,7 @@ export async function GET() {
       .from("hooks")
       .select("hook_text, hook_type, engagement_rate, funnel_stage, profiles(username)")
       .eq("funnel_stage", "mofu")
-      .lte("engagement_rate", 1)
+      .lte("engagement_rate", 100)
       .order("engagement_rate", { ascending: false })
       .limit(5);
     const topHooksMOFU = rawHooksMOFU || [];
@@ -102,7 +102,7 @@ export async function GET() {
       .from("hooks")
       .select("hook_text, hook_type, engagement_rate, funnel_stage, profiles(username)")
       .eq("funnel_stage", "bofu")
-      .lte("engagement_rate", 1)
+      .lte("engagement_rate", 100)
       .order("engagement_rate", { ascending: false })
       .limit(5);
     const topHooksBOFU = rawHooksBOFU || [];
@@ -113,7 +113,7 @@ export async function GET() {
       .select("hook_text, hook_type, content_theme, engagement_rate, views_count, funnel_stage, caption, profiles(username)")
       .eq("funnel_stage", "tofu")
       .not("hook_text", "is", null)
-      .lte("engagement_rate", 1)
+      .lte("engagement_rate", 100)
       .order("engagement_rate", { ascending: false })
       .limit(8);
     const topPostsTOFU = rawPostsTOFU || [];
@@ -123,7 +123,7 @@ export async function GET() {
       .select("hook_text, hook_type, content_theme, engagement_rate, views_count, funnel_stage, caption, profiles(username)")
       .eq("funnel_stage", "mofu")
       .not("hook_text", "is", null)
-      .lte("engagement_rate", 1)
+      .lte("engagement_rate", 100)
       .order("engagement_rate", { ascending: false })
       .limit(8);
     const topPostsMOFU = rawPostsMOFU || [];
@@ -133,7 +133,7 @@ export async function GET() {
       .select("hook_text, hook_type, content_theme, engagement_rate, views_count, funnel_stage, caption, profiles(username)")
       .eq("funnel_stage", "bofu")
       .not("hook_text", "is", null)
-      .lte("engagement_rate", 1)
+      .lte("engagement_rate", 100)
       .order("engagement_rate", { ascending: false })
       .limit(8);
     const topPostsBOFU = rawPostsBOFU || [];
@@ -198,10 +198,10 @@ export async function GET() {
       .join("\n\n");
 
     const formatPosts = (posts: any[]) =>
-      posts.map((p, i) => `${i + 1}. Hook: "${p.hook_text}" | Tema: ${p.content_theme} | Eng: ${((p.engagement_rate || 0) * 100).toFixed(1)}% | Views: ${p.views_count || 0} | @${(p as any).profiles?.username}`).join("\n");
+      posts.map((p, i) => `${i + 1}. Hook: "${p.hook_text}" | Tema: ${p.content_theme} | Eng: ${(p.engagement_rate || 0).toFixed(1)}% | Views: ${p.views_count || 0} | @${(p as any).profiles?.username}`).join("\n");
 
     const formatHooks = (hooks: any[]) =>
-      hooks.map((h, i) => `${i + 1}. "${h.hook_text}" (${h.hook_type}) — Eng: ${((h.engagement_rate || 0) * 100).toFixed(1)}% — @${(h as any).profiles?.username}`).join("\n");
+      hooks.map((h, i) => `${i + 1}. "${h.hook_text}" (${h.hook_type}) — Eng: ${(h.engagement_rate || 0).toFixed(1)}% — @${(h as any).profiles?.username}`).join("\n");
 
     const formatComments = (comments: any[]) =>
       comments.map((c) => `- "${c.text?.slice(0, 120)}"`).join("\n");

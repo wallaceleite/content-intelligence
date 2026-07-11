@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
   try {
     const { days = 7 } = await req.json().catch(() => ({}));
 
-    const [voice, { data: analyses }, { data: hooks }, { data: comments }] =
+    const [voice, { data: analyses }, { data: hooks }, { data: comments }, { data: artefatos }, { data: fewshot }, { data: previous }] =
       await Promise.all([
         getBrandVoice(),
         supabaseAdmin
@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
         supabaseAdmin
           .from("hooks")
           .select("hook_text, hook_type, engagement_rate, funnel_stage, profiles(username)")
-          .lte("engagement_rate", 1)
+          .lte("engagement_rate", 100)
           .order("engagement_rate", { ascending: false })
           .limit(20),
         supabaseAdmin
@@ -73,7 +73,34 @@ export async function POST(req: NextRequest) {
           .select("text, intent_type")
           .in("intent_type", ["purchase_intent", "audience_voice", "objection", "question"])
           .limit(30),
+        supabaseAdmin
+          .from("business_config")
+          .select("section, data")
+          .in("section", ["estruturas_vencedoras", "formatos_assinatura"]),
+        supabaseAdmin
+          .from("posts")
+          .select("transcript, engagement_rate, video_duration, profiles(username)")
+          .not("transcript", "is", null)
+          .lte("engagement_rate", 100)
+          .order("engagement_rate", { ascending: false })
+          .limit(2),
+        supabaseAdmin
+          .from("direction_posts")
+          .select("planned_date, title, funnel_stage, status, based_on")
+          .order("planned_date", { ascending: false })
+          .limit(14),
       ]);
+
+    const art: Record<string, any> = {};
+    for (const row of artefatos || []) art[row.section] = row.data;
+
+    const fewshotBlock = (fewshot || [])
+      .map((p) => `### EXEMPLO REAL @${(p as any).profiles?.username} (${p.engagement_rate?.toFixed(1)}% eng, ${Math.round(p.video_duration || 0)}s) — estude o RITMO e a estrutura:\n${String(p.transcript).slice(0, 2000)}`)
+      .join("\n\n");
+
+    const historico = (previous || [])
+      .map((p) => `- ${p.planned_date} [${p.funnel_stage}] "${p.title}" — status: ${p.status}`)
+      .join("\n");
 
     // 1 análise por perfil (a mais recente), fatia estratégica (Partes 2 e 4)
     const seen = new Set<string>();
@@ -111,6 +138,18 @@ export async function POST(req: NextRequest) {
 
     const prompt = `Gere a DIREÇÃO DE CONTEÚDO de ${days} dias para o @owallaceleite: um post por dia, cada um com roteiro COMPLETO pronto pra gravar/produzir.
 
+## AS 3 FRANQUIAS ASSINATURA (monoflow — TODO post pertence a uma delas, respeite estrutura e frequência)
+${JSON.stringify(art.formatos_assinatura?.formatos || [], null, 1)}
+
+## ENGENHARIA DOS VENCEDORES (extraída das transcrições reais — siga os timings e a semeadura de CTA)
+${JSON.stringify(art.estruturas_vencedoras || {}, null, 1)}
+
+## TRANSCRIÇÕES-MODELO (few-shot de ritmo — NUNCA copie o texto, copie a arquitetura)
+${fewshotBlock}
+
+## HISTÓRICO RECENTE (continuidade: não repita temas; se houver "Diário do Invisível", continue a numeração dos episódios)
+${historico || "Primeira semana"}
+
 ## CASES DE SUCESSO ENGENHEIRADOS (a base de tudo — replique os MECANISMOS, nunca o texto)
 ${caseInsights || "Sem análises ainda"}
 
@@ -124,15 +163,14 @@ ${vozAudiencia}
 ${dates.map((d, i) => `Dia ${i + 1}: ${d} (${new Date(d + "T12:00:00").toLocaleDateString("pt-BR", { weekday: "long" })})`).join("\n")}
 
 ## REGRAS DA DIREÇÃO
-1. Mix de funil para perfil pequeno em crescimento: ~50% TOFU, ~30% MOFU, ~20% BOFU (o rafa.grandi roda BOFU 0 com 677k views — o Wallace NÃO pode; precisa converter enquanto cresce)
-2. Todo reel: hook_verbal nos primeiros 3s que abre lacuna + hook_visual (ação/quebra de padrão — nunca "sentado falando")
-3. Roteiro em beats: cada item do script = um momento do vídeo (ex: "0-3s HOOK", "3-15s CONTEXTO", "15-35s VIRADA", "35-50s ENTREGA", "50-60s CTA") com a fala COMPLETA, palavra por palavra, na voz do Wallace
-4. CTA mecânico comprovado nos cases: "comenta [PALAVRA] que te mando no Direct" — variar a palavra por post
-5. based_on: cite o case e o mecanismo específico que inspirou (ex: "rafa.grandi — tutorial de ferramenta com CTA de Direct, 22% eng")
-6. why: por que ESTE post AGORA (gap de funil, dor da audiência, padrão comprovado)
-7. kpi: a métrica que diz se funcionou (ex: "comentários com a palavra-chave > 30")
-8. Teste da criança de 10 anos: se ela não entende o hook, reescreva
-9. Temas 100% no território do Wallace: estratégia digital, IA aplicada a marketing, funis, infoprodutos, bastidor do próprio crescimento, TDAH/rotina real como tempero pessoal`;
+1. Rotação das franquias na semana: ~50% "IA na Prática" (TOFU), ~30% "Virada de Chave" (MOFU + 1 BOFU com case), ~20% "Diário do Invisível" (episódios numerados em sequência)
+2. Cada roteiro segue a estrutura_beats EXATA da sua franquia, com os timings da engenharia dos vencedores (hook sem saudação, negação de fricção no início, semeadura de CTA aos ~55%, repetição aos ~95%)
+3. script = fala COMPLETA palavra por palavra, na voz real do Wallace (léxico e construções extraídos dos posts dele — nada de "tamo junto let's go", nada de "secretos")
+4. hook_verbal usa uma das anatomias comprovadas; hook_visual = ação na tela (nunca "sentado falando")
+5. Palavra-gatilho do CTA = a palavra-tema central do post
+6. based_on: case + mecanismo + número de evidência; why: por que este post agora; kpi: métrica concreta de sucesso
+7. Teste da criança de 10 anos no hook
+8. Oscilação emocional: nunca 2+ beats positivos seguidos em storytelling`;
 
     const { data: output, usage } = await generateJSON<{ posts: any[] }>({
       system: `Você é o diretor de conteúdo pessoal do @owallaceleite. Sua função é DIRIGIR: entregar posts prontos pra executar, não sugestões vagas. Cada roteiro sai pronto pra gravar — fala completa, palavra por palavra.\n\n${voice}`,

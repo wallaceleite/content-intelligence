@@ -89,7 +89,7 @@ export async function POST(req: NextRequest) {
       .join("\n\n");
 
     const hooksContext = (hooks || [])
-      .map((h, i) => `${i + 1}. "${h.hook_text}" (${h.hook_type}, eng: ${((h.engagement_rate || 0) * 100).toFixed(1)}%) — @${(h as any).profiles?.username}`)
+      .map((h, i) => `${i + 1}. "${h.hook_text}" (${h.hook_type}, eng: ${(h.engagement_rate || 0).toFixed(1)}%) — @${(h as any).profiles?.username}`)
       .join("\n");
 
     // Extract key insights from latest analysis

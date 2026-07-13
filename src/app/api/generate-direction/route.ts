@@ -76,7 +76,7 @@ export async function POST(req: NextRequest) {
         supabaseAdmin
           .from("business_config")
           .select("section, data")
-          .in("section", ["estruturas_vencedoras", "formatos_assinatura"]),
+          .in("section", ["estruturas_vencedoras", "formatos_assinatura", "metodologia_roteiros"]),
         supabaseAdmin
           .from("posts")
           .select("transcript, engagement_rate, video_duration, profiles(username)")
@@ -138,6 +138,9 @@ export async function POST(req: NextRequest) {
 
     const prompt = `Gere a DIREÇÃO DE CONTEÚDO de ${days} dias para o @owallaceleite: um post por dia, cada um com roteiro COMPLETO pronto pra gravar/produzir.
 
+## METODOLOGIA DE ROTEIRO (obrigatória — regras de hook, universo algorítmico, estruturas, CTA e linguagem)
+${JSON.stringify(art.metodologia_roteiros || {}, null, 1)}
+
 ## AS 3 FRANQUIAS ASSINATURA (monoflow — TODO post pertence a uma delas, respeite estrutura e frequência)
 ${JSON.stringify(art.formatos_assinatura?.formatos || [], null, 1)}
 
@@ -163,14 +166,15 @@ ${vozAudiencia}
 ${dates.map((d, i) => `Dia ${i + 1}: ${d} (${new Date(d + "T12:00:00").toLocaleDateString("pt-BR", { weekday: "long" })})`).join("\n")}
 
 ## REGRAS DA DIREÇÃO
-1. Rotação das franquias na semana: ~50% "IA na Prática" (TOFU), ~30% "Virada de Chave" (MOFU + 1 BOFU com case), ~20% "Diário do Invisível" (episódios numerados em sequência)
-2. Cada roteiro segue a estrutura_beats EXATA da sua franquia, com os timings da engenharia dos vencedores (hook sem saudação, negação de fricção no início, semeadura de CTA aos ~55%, repetição aos ~95%)
-3. script = fala COMPLETA palavra por palavra, na voz real do Wallace (léxico e construções extraídos dos posts dele — nada de "tamo junto let's go", nada de "secretos")
-4. hook_verbal usa uma das anatomias comprovadas; hook_visual = ação na tela (nunca "sentado falando")
-5. Palavra-gatilho do CTA = a palavra-tema central do post
-6. based_on: case + mecanismo + número de evidência; why: por que este post agora; kpi: métrica concreta de sucesso
-7. Teste da criança de 10 anos no hook
-8. Oscilação emocional: nunca 2+ beats positivos seguidos em storytelling`;
+1. Rotação das franquias: ~50% "IA na Prática" (TOFU atração em universo AMPLO), ~30% "Virada de Chave" (MOFU profundidade + 1 BOFU com case), ~20% "Diário do Invisível" (episódios numerados — continue a numeração do histórico)
+2. HOOK SEMPRE SOBRE O ESPECTADOR (sujeito = VOCÊ, nunca EU) usando um dos 6 ângulos da metodologia; exceção: confissão-espelho. Todo hook vem com frase de ATERRISSAGEM nos segundos 4-7
+3. TOFU compete em universo amplo (IA, negócios, produtividade) SEM jargão de nicho no hook. 3 camadas: hook amplo, profundidade expert, posicionamento
+4. Cada roteiro usa uma das 4 estruturas de condução; cascatas seguem ESCADA DE GRAVIDADE (3º mecanismo = o mais forte)
+5. PALAVRAS-GATILHO PERMITIDAS: apenas "SISTEMA" (funil, automatizado) e "DIAGNÓSTICO" (BOFU, resposta manual do Wallace). Posts sem gatilho usam: comentário qualitativo, compartilhamento como missão, me segue, ou pergunta retórica. Máximo 2 CTAs por post
+6. TODO post fecha com a assinatura fixa idêntica (metodologia_roteiros.assinatura_fixa)
+7. script = fala COMPLETA palavra por palavra em linguagem FALADA (tá/tô/pra, frases curtas, sem travessão), na voz real do Wallace; direção visual só num beat final "NOTA DE PRODUÇÃO", que inclui 2 HOOKS ALTERNATIVOS para teste
+8. based_on: case + mecanismo + número de evidência; why: por que este post agora; kpi: métrica concreta de sucesso
+9. Oscilação emocional em storytelling: nunca 2+ beats positivos seguidos; semeadura de CTA aos ~55% + repetição aos ~95%`;
 
     const { data: output, usage } = await generateJSON<{ posts: any[] }>({
       system: `Você é o diretor de conteúdo pessoal do @owallaceleite. Sua função é DIRIGIR: entregar posts prontos pra executar, não sugestões vagas. Cada roteiro sai pronto pra gravar — fala completa, palavra por palavra.\n\n${voice}`,

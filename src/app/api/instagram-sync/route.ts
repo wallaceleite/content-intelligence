@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 const IG_TOKEN = process.env.INSTAGRAM_ACCESS_TOKEN!;
-const IG_API = "https://graph.instagram.com/v21.0";
+const IG_API = "https://graph.facebook.com/v26.0";
+const IG_USER_ID = process.env.INSTAGRAM_USER_ID || "17841448475788199";
 const MY_USERNAME = "owallaceleite";
 
 async function igFetch(url: string) {
@@ -28,7 +29,7 @@ export async function POST(req: NextRequest) {
   try {
     // 1. Get profile info
     const profileData = await igFetch(
-      `${IG_API}/me?fields=id,username,name,biography,followers_count,follows_count,media_count,profile_picture_url,website`
+      `${IG_API}/${IG_USER_ID}?fields=id,username,name,biography,followers_count,follows_count,media_count,profile_picture_url,website`
     );
 
     if (profileData.error) {
@@ -72,7 +73,7 @@ export async function POST(req: NextRequest) {
 
     // 3. Get media from Instagram (only first page — recent posts)
     let allMedia: any[] = [];
-    let url = `${IG_API}/me/media?fields=id,media_type,timestamp,like_count,comments_count,shortcode&limit=50`;
+    let url = `${IG_API}/${IG_USER_ID}/media?fields=id,media_type,timestamp,like_count,comments_count,shortcode&limit=50`;
 
     while (url && allMedia.length < 200) {
       const data = await igFetch(url);

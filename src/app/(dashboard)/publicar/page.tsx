@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { supabase } from "@/lib/supabase";
 import {
   Send, Upload, Loader2, CheckCircle2, XCircle, Clock, CalendarClock,
   RefreshCw, Trash2, Copy, ExternalLink, Play, Camera, Music2,
@@ -91,12 +90,21 @@ export default function PublicarPage() {
       const sign = await signRes.json();
       if (sign.error) throw new Error(sign.error);
 
-      setUploadPct(10);
-      const { error: upErr } = await supabase.storage
-        .from("videos")
-        .uploadToSignedUrl(sign.path, sign.token, file, { contentType: file.type || "video/mp4" });
-      if (upErr) throw new Error(upErr.message);
-      setUploadPct(80);
+      // PUT direto na URL assinada com progresso real — sem tocar no arquivo
+      await new Promise<void>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open("PUT", sign.signedUrl);
+        xhr.setRequestHeader("Content-Type", file.type || "video/mp4");
+        xhr.upload.onprogress = (e) => {
+          if (e.lengthComputable) setUploadPct(Math.round((e.loaded / e.total) * 100));
+        };
+        xhr.onload = () =>
+          xhr.status >= 200 && xhr.status < 300
+            ? resolve()
+            : reject(new Error(`Upload falhou (HTTP ${xhr.status}) — verifique o limite de tamanho do storage`));
+        xhr.onerror = () => reject(new Error("Falha de rede no upload"));
+        xhr.send(file);
+      });
 
       const createRes = await fetch("/api/videos", {
         method: "POST",

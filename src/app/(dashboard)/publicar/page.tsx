@@ -53,7 +53,49 @@ export default function PublicarPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [genStatus, setGenStatus] = useState<"processando" | "pronto" | "erro" | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  // Depois do upload, espera a transcrição gerar título/legenda/# na voz do Wallace
+  // e pré-preenche só o que ainda estiver vazio (edições manuais nunca são sobrescritas)
+  function startSuggestionPolling(videoId: string) {
+    const timer = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/videos/${videoId}`);
+        const { video: v } = await res.json();
+        if (!v) return;
+        if (v.transcript_status === "erro") {
+          clearInterval(timer);
+          setGenStatus("erro");
+          return;
+        }
+        if (v.transcript_status !== "concluida") return;
+        clearInterval(timer);
+        const s = v.suggestions;
+        if (!s) { setGenStatus("erro"); return; }
+        setForms((f) => ({
+          instagram: {
+            ...f.instagram,
+            caption: f.instagram.caption || s.instagram?.caption || "",
+            hashtags: f.instagram.hashtags || s.instagram?.hashtags || "",
+          },
+          youtube: {
+            ...f.youtube,
+            title: f.youtube.title || s.youtube?.title || "",
+            caption: f.youtube.caption || s.youtube?.caption || "",
+            hashtags: f.youtube.hashtags || s.youtube?.hashtags || "",
+          },
+          tiktok: {
+            ...f.tiktok,
+            caption: f.tiktok.caption || s.tiktok?.caption || "",
+            hashtags: f.tiktok.hashtags || s.tiktok?.hashtags || "",
+          },
+        }));
+        setGenStatus("pronto");
+      } catch { /* tenta de novo no próximo tick */ }
+    }, 5000);
+    setTimeout(() => clearInterval(timer), 6 * 60 * 1000);
+  }
 
   async function loadQueue() {
     const res = await fetch("/api/publications");
@@ -118,6 +160,8 @@ export default function PublicarPage() {
 
       // Transcrição em background — RF-11: sem ação do usuário
       fetch(`/api/videos/${created.video.id}/transcribe`, { method: "POST" }).catch(() => {});
+      setGenStatus("processando");
+      startSuggestionPolling(created.video.id);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Falha no upload");
     } finally {
@@ -268,8 +312,11 @@ export default function PublicarPage() {
             <CheckCircle2 className="w-5 h-5" style={{ color: "#22C55E" }} />
             <div>
               <div className="text-sm font-medium">{video.title}</div>
-              <div className="text-xs" style={{ color: "var(--text-tertiary)" }}>
-                Vídeo no ar no storage · transcrição rodando em background
+              <div className="text-xs" style={{ color: genStatus === "pronto" ? "#22C55E" : "var(--text-tertiary)" }}>
+                {genStatus === "processando" && "Transcrevendo e escrevendo título, legenda e # na sua voz…"}
+                {genStatus === "pronto" && "Legendas geradas com SEO por plataforma — revise e ajuste antes de publicar"}
+                {genStatus === "erro" && "Geração automática falhou — preencha os campos manualmente"}
+                {!genStatus && "Vídeo no ar no storage"}
               </div>
             </div>
           </div>

@@ -29,7 +29,7 @@ export async function POST(
 
   await supabaseAdmin
     .from("videos")
-    .update({ transcript_status: "processando", transcript_error: null })
+    .update({ transcript_status: "transcrevendo", transcript_error: null })
     .eq("id", id);
 
   try {
@@ -70,13 +70,19 @@ export async function POST(
     } catch { /* tema é opcional — transcrição não pode falhar por causa dele */ }
 
 
+    // Transcrição pronta; agora a etapa de geração (a UI acompanha o estágio)
     await supabaseAdmin
       .from("videos")
-      .update({ transcript, theme: theme || null, transcript_status: "concluida" })
+      .update({ transcript, theme: theme || null, transcript_status: "gerando" })
       .eq("id", id);
 
     // Legenda/título/# por rede na voz do Wallace (erro fica registrado no banco)
     const gen = await suggestCaptions(id);
+
+    await supabaseAdmin
+      .from("videos")
+      .update({ transcript_status: "concluida" })
+      .eq("id", id);
 
     return NextResponse.json({
       success: true,

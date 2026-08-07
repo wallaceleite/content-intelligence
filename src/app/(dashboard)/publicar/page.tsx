@@ -53,29 +53,53 @@ export default function PublicarPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
-  const [genStatus, setGenStatus] = useState<"processando" | "pronto" | "erro" | null>(null);
+  const [stage, setStage] = useState<"transcrevendo" | "gerando" | "concluida" | "erro" | null>(null);
+  const [stageError, setStageError] = useState<string | null>(null);
+  const [pipePct, setPipePct] = useState(0);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  // Depois do upload, espera a transcrição gerar título/legenda/# na voz do Wallace
-  // e pré-preenche só o que ainda estiver vazio (edições manuais nunca são sobrescritas)
+  // Barra de progresso do pipeline: % avança dentro da faixa de cada estágio
+  // (transcrição não expõe % real, então a faixa anda com o tempo e trava no teto)
+  const STAGE_RANGE: Record<string, [number, number]> = {
+    transcrevendo: [25, 65],
+    gerando: [70, 95],
+    concluida: [100, 100],
+  };
+
+  // Depois do upload, acompanha o pipeline (transcrição → geração) e pré-preenche
+  // só o que ainda estiver vazio (edições manuais nunca são sobrescritas)
   function startSuggestionPolling(videoId: string) {
     const timer = setInterval(async () => {
       try {
         const res = await fetch(`/api/videos/${videoId}`);
         const { video: v } = await res.json();
         if (!v) return;
-        if (v.transcript_status === "erro") {
+        const st = v.transcript_status === "processando" ? "transcrevendo" : v.transcript_status;
+
+        if (st === "erro") {
           clearInterval(timer);
-          setGenStatus("erro");
+          setStage("erro");
+          setStageError(v.transcript_error || "Falha no processamento");
           return;
         }
-        if (v.transcript_status !== "concluida") return;
-        clearInterval(timer);
-        if (!v.suggestions) { setGenStatus("erro"); return; }
-        applySuggestions(v.suggestions);
+        if (st === "transcrevendo" || st === "gerando") {
+          setStage(st);
+          const [base, cap] = STAGE_RANGE[st];
+          setPipePct((p) => Math.min(cap, Math.max(base, p + 4)));
+          return;
+        }
+        if (st === "concluida") {
+          clearInterval(timer);
+          if (v.suggestions) {
+            applySuggestions(v.suggestions);
+          } else {
+            setStage("erro");
+            setStageError(v.transcript_error || "Legendas não geradas");
+          }
+        }
       } catch { /* tenta de novo no próximo tick */ }
-    }, 5000);
-    setTimeout(() => clearInterval(timer), 6 * 60 * 1000);
+    }, 4000);
+    setTimeout(() => clearInterval(timer), 8 * 60 * 1000);
   }
 
   function applySuggestions(s: Record<string, { title?: string; caption?: string; hashtags?: string }>) {
@@ -97,24 +121,31 @@ export default function PublicarPage() {
             hashtags: f.tiktok.hashtags || s.tiktok?.hashtags || "",
           },
     }));
-    setGenStatus("pronto");
+    setStage("concluida");
+    setStageError(null);
+    setPipePct(100);
   }
 
   // Retry manual: busca sugestões já salvas ou manda gerar de novo da transcrição
   async function fetchSuggestions() {
     if (!video) return;
-    setGenStatus("processando");
+    setStage("gerando");
+    setStageError(null);
+    setPipePct(75);
     try {
       const res = await fetch(`/api/videos/${video.id}`);
       let s = (await res.json()).video?.suggestions;
       if (!s) {
         const gen = await fetch(`/api/videos/${video.id}/suggest`, { method: "POST" });
-        s = (await gen.json()).suggestions;
+        const gj = await gen.json();
+        if (gj.error) { setStage("erro"); setStageError(gj.error); return; }
+        s = gj.suggestions;
       }
       if (s) applySuggestions(s);
-      else setGenStatus("erro");
+      else { setStage("erro"); setStageError("Legendas não geradas"); }
     } catch {
-      setGenStatus("erro");
+      setStage("erro");
+      setStageError("Falha de rede ao buscar legendas");
     }
   }
 
@@ -181,7 +212,9 @@ export default function PublicarPage() {
 
       // Transcrição em background — RF-11: sem ação do usuário
       fetch(`/api/videos/${created.video.id}/transcribe`, { method: "POST" }).catch(() => {});
-      setGenStatus("processando");
+      setStage("transcrevendo");
+      setStageError(null);
+      setPipePct(25);
       startSuggestionPolling(created.video.id);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Falha no upload");
@@ -327,30 +360,49 @@ export default function PublicarPage() {
           )}
         </button>
       ) : (
-        <div className="rounded-2xl border p-4 flex items-center justify-between"
+        <div className="rounded-2xl border p-4 space-y-3"
           style={{ borderColor: "var(--border-glass)", background: "var(--background-elevated)" }}>
-          <div className="flex items-center gap-3">
-            <CheckCircle2 className="w-5 h-5" style={{ color: "#22C55E" }} />
-            <div>
-              <div className="text-sm font-medium">{video.title}</div>
-              <div className="text-xs" style={{ color: genStatus === "pronto" ? "#22C55E" : "var(--text-tertiary)" }}>
-                {genStatus === "processando" && "Transcrevendo e escrevendo título, legenda e # na sua voz…"}
-                {genStatus === "pronto" && "Legendas geradas com SEO por plataforma — revise e ajuste antes de publicar"}
-                {genStatus === "erro" && "Geração automática falhou — preencha os campos manualmente"}
-                {!genStatus && "Vídeo no ar no storage"}
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0">
+              {stage === "concluida"
+                ? <CheckCircle2 className="w-5 h-5 flex-shrink-0" style={{ color: "#22C55E" }} />
+                : stage === "erro"
+                ? <XCircle className="w-5 h-5 flex-shrink-0" style={{ color: "#EF4444" }} />
+                : <Loader2 className="w-5 h-5 flex-shrink-0 animate-spin" style={{ color: "var(--accent)" }} />}
+              <div className="min-w-0">
+                <div className="text-sm font-medium truncate">{video.title}</div>
+                <div className="text-xs" style={{ color: stage === "concluida" ? "#22C55E" : stage === "erro" ? "#EF4444" : "var(--text-tertiary)" }}>
+                  {stage === "transcrevendo" && "Transcrevendo o áudio do vídeo…"}
+                  {stage === "gerando" && "Escrevendo título, legenda e # na sua voz…"}
+                  {stage === "concluida" && "Legendas prontas com SEO por plataforma — revise antes de publicar"}
+                  {stage === "erro" && `Falhou: ${stageError || "erro no processamento"}`}
+                  {!stage && "Vídeo no ar no storage"}
+                </div>
               </div>
             </div>
-          </div>
-          <div className="flex items-center gap-3">
-            {genStatus !== "pronto" && (
-              <button onClick={fetchSuggestions} className="text-xs underline" style={{ color: "var(--accent)" }}>
-                puxar legendas
+            <div className="flex items-center gap-3 flex-shrink-0">
+              {stage !== "concluida" && (
+                <button onClick={fetchSuggestions} className="text-xs underline" style={{ color: "var(--accent)" }}>
+                  {stage === "erro" ? "tentar de novo" : "puxar legendas"}
+                </button>
+              )}
+              <button onClick={() => setVideo(null)} className="text-xs underline" style={{ color: "var(--text-tertiary)" }}>
+                trocar vídeo
               </button>
-            )}
-            <button onClick={() => setVideo(null)} className="text-xs underline" style={{ color: "var(--text-tertiary)" }}>
-              trocar vídeo
-            </button>
+            </div>
           </div>
+          {/* Barra de progresso do pipeline (transcrição → legendas) */}
+          {stage && stage !== "erro" && (
+            <div className="flex items-center gap-3">
+              <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.08)" }}>
+                <div className="h-full rounded-full transition-all duration-700"
+                  style={{ width: `${pipePct}%`, background: stage === "concluida" ? "#22C55E" : "var(--accent)" }} />
+              </div>
+              <span className="text-xs tabular-nums w-9 text-right" style={{ color: "var(--text-tertiary)" }}>
+                {pipePct}%
+              </span>
+            </div>
+          )}
         </div>
       )}
       <input ref={fileRef} type="file" accept="video/*" className="hidden"

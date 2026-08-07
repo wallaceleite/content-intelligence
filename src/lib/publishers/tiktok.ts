@@ -63,6 +63,13 @@ export async function publishTikTok(input: PublishInput): Promise<PublishResult>
     if (!videoRes.ok) return { ok: false, error: "Falha ao baixar vídeo do storage" };
     const video = Buffer.from(await videoRes.arrayBuffer());
 
+    // Regra de chunk do TikTok: peça única só até 64MB; acima disso, pedaços de
+    // 5-64MB, com o resto embutido no último pedaço (último pode ter até 128MB)
+    const CHUNK = 50 * 1024 * 1024;
+    const single = video.length <= 64 * 1024 * 1024;
+    const chunkSize = single ? video.length : CHUNK;
+    const totalChunks = single ? 1 : Math.floor(video.length / CHUNK);
+
     // Modo inbox (rascunho): título/legenda são definidos pelo criador ao publicar no app
     const initRes = await fetch(`${TT_API}/post/publish/inbox/video/init/`, {
       method: "POST",
@@ -74,8 +81,8 @@ export async function publishTikTok(input: PublishInput): Promise<PublishResult>
         source_info: {
           source: "FILE_UPLOAD",
           video_size: video.length,
-          chunk_size: video.length,
-          total_chunk_count: 1,
+          chunk_size: chunkSize,
+          total_chunk_count: totalChunks,
         },
       }),
     });
@@ -84,16 +91,22 @@ export async function publishTikTok(input: PublishInput): Promise<PublishResult>
       return { ok: false, error: `TikTok init: ${init.error.message || init.error.code}` };
     }
 
-    const uploadRes = await fetch(init.data.upload_url, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "video/mp4",
-        "Content-Range": `bytes 0-${video.length - 1}/${video.length}`,
-      },
-      body: video,
-    });
-    if (!uploadRes.ok) {
-      return { ok: false, error: `TikTok upload: HTTP ${uploadRes.status}` };
+    for (let i = 0; i < totalChunks; i++) {
+      const start = i * chunkSize;
+      // Último pedaço leva o resto do arquivo
+      const end = i === totalChunks - 1 ? video.length : start + chunkSize;
+      const uploadRes = await fetch(init.data.upload_url, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "video/mp4",
+          "Content-Length": String(end - start),
+          "Content-Range": `bytes ${start}-${end - 1}/${video.length}`,
+        },
+        body: video.subarray(start, end),
+      });
+      if (!uploadRes.ok) {
+        return { ok: false, error: `TikTok upload (pedaço ${i + 1}/${totalChunks}): HTTP ${uploadRes.status}` };
+      }
     }
 
     return {

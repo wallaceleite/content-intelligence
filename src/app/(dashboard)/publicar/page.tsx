@@ -71,10 +71,16 @@ export default function PublicarPage() {
         }
         if (v.transcript_status !== "concluida") return;
         clearInterval(timer);
-        const s = v.suggestions;
-        if (!s) { setGenStatus("erro"); return; }
-        setForms((f) => ({
-          instagram: {
+        if (!v.suggestions) { setGenStatus("erro"); return; }
+        applySuggestions(v.suggestions);
+      } catch { /* tenta de novo no próximo tick */ }
+    }, 5000);
+    setTimeout(() => clearInterval(timer), 6 * 60 * 1000);
+  }
+
+  function applySuggestions(s: Record<string, { title?: string; caption?: string; hashtags?: string }>) {
+    setForms((f) => ({
+      instagram: {
             ...f.instagram,
             caption: f.instagram.caption || s.instagram?.caption || "",
             hashtags: f.instagram.hashtags || s.instagram?.hashtags || "",
@@ -90,11 +96,26 @@ export default function PublicarPage() {
             caption: f.tiktok.caption || s.tiktok?.caption || "",
             hashtags: f.tiktok.hashtags || s.tiktok?.hashtags || "",
           },
-        }));
-        setGenStatus("pronto");
-      } catch { /* tenta de novo no próximo tick */ }
-    }, 5000);
-    setTimeout(() => clearInterval(timer), 6 * 60 * 1000);
+    }));
+    setGenStatus("pronto");
+  }
+
+  // Retry manual: busca sugestões já salvas ou manda gerar de novo da transcrição
+  async function fetchSuggestions() {
+    if (!video) return;
+    setGenStatus("processando");
+    try {
+      const res = await fetch(`/api/videos/${video.id}`);
+      let s = (await res.json()).video?.suggestions;
+      if (!s) {
+        const gen = await fetch(`/api/videos/${video.id}/suggest`, { method: "POST" });
+        s = (await gen.json()).suggestions;
+      }
+      if (s) applySuggestions(s);
+      else setGenStatus("erro");
+    } catch {
+      setGenStatus("erro");
+    }
   }
 
   async function loadQueue() {
@@ -320,9 +341,16 @@ export default function PublicarPage() {
               </div>
             </div>
           </div>
-          <button onClick={() => setVideo(null)} className="text-xs underline" style={{ color: "var(--text-tertiary)" }}>
-            trocar vídeo
-          </button>
+          <div className="flex items-center gap-3">
+            {genStatus !== "pronto" && (
+              <button onClick={fetchSuggestions} className="text-xs underline" style={{ color: "var(--accent)" }}>
+                puxar legendas
+              </button>
+            )}
+            <button onClick={() => setVideo(null)} className="text-xs underline" style={{ color: "var(--text-tertiary)" }}>
+              trocar vídeo
+            </button>
+          </div>
         </div>
       )}
       <input ref={fileRef} type="file" accept="video/*" className="hidden"

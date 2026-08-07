@@ -136,8 +136,10 @@ PROCESSO OBRIGATÓRIO:
 TRAVAS ANTI-GENÉRICO (violou = falhou):
 - Proibido: #fyp #viral #foryou #marketing #digital #empreendedorismo e qualquer hashtag que
   sirva pra qualquer vídeo do mundo. Hashtag boa é a que só serve pra ESTE tema.
-- Proibido clichê de IA: "descubra", "confira", "não perca", "game changer", "🚀", em-dash,
+- Proibido clichê de IA: "descubra", "confira", "não perca", "game changer", "🚀",
   "link da bio", tricolon decorativo.
+- PROIBIDO o caractere travessão (—) em qualquer campo. Onde faria pausa, use dois-pontos,
+  vírgula ou ponto final. Um único travessão na saída = saída inválida.
 - Se a legenda funcionaria em qualquer vídeo do nicho, ela está genérica: reescreva amarrando
   em detalhe específico da transcrição (número, exemplo, frase dita no vídeo).
 

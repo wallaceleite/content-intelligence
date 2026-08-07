@@ -24,6 +24,7 @@ const SUGGESTIONS_SCHEMA = {
         hashtags: { type: "string", description: "3-5 hashtags de NICHO extraídas do tema real, separadas por espaço, com #" },
       },
       required: ["title", "caption", "hashtags"],
+      additionalProperties: false,
     },
     instagram: {
       type: "object",
@@ -32,6 +33,7 @@ const SUGGESTIONS_SCHEMA = {
         hashtags: { type: "string", description: "5-8 hashtags: misturar keyword exata + variações de nicho + 1-2 de alcance médio. Zero genéricas" },
       },
       required: ["caption", "hashtags"],
+      additionalProperties: false,
     },
     tiktok: {
       type: "object",
@@ -40,9 +42,11 @@ const SUGGESTIONS_SCHEMA = {
         hashtags: { type: "string", description: "3-5 hashtags: keyword exata como hashtag + nicho específico. Proibido #fyp #viral #foryou" },
       },
       required: ["caption", "hashtags"],
+      additionalProperties: false,
     },
   },
   required: ["search_query", "youtube", "instagram", "tiktok"],
+  additionalProperties: false,
 } as const;
 
 export const maxDuration = 300;

@@ -29,6 +29,16 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
+  // Páginas/arquivos públicos: legal (revisores TikTok/Google acessam deslogados)
+  // e arquivos estáticos de verificação de domínio na raiz
+  if (
+    request.nextUrl.pathname === "/termos" ||
+    request.nextUrl.pathname === "/privacidade" ||
+    /\.(txt|xml|ico|png|svg|webmanifest)$/.test(request.nextUrl.pathname)
+  ) {
+    return supabaseResponse;
+  }
+
   // Allow access to login page and auth callback
   if (
     request.nextUrl.pathname === "/login" ||

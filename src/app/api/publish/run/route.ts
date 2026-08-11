@@ -28,7 +28,7 @@ type PubRow = {
 };
 
 // Cada rede roda isolada e em paralelo: uma travar/falhar não bloqueia as outras.
-async function processOne(pub: PubRow) {
+async function processOne(pub: PubRow, videoBytes?: Buffer) {
   await supabaseAdmin
     .from("publications")
     .update({ status: "publicando", attempts: pub.attempts + 1, updated_at: new Date().toISOString() })
@@ -39,6 +39,7 @@ async function processOne(pub: PubRow) {
     result = await withTimeout(
       publishTo(pub.network as Network, {
         videoUrl: pub.videos.public_url,
+        videoBytes,
         title: pub.title || pub.videos.title,
         caption: pub.caption || "",
         hashtags: pub.hashtags || "",
@@ -100,7 +101,23 @@ async function processQueue(ids?: string[]) {
   const { data: due, error } = await query.limit(10);
   if (error) throw new Error(error.message);
 
-  const settled = await Promise.allSettled((due || []).map((pub) => processOne(pub as PubRow)));
+  // Baixa cada vídeo UMA vez e compartilha o buffer entre as redes
+  // (3 downloads de 234MB em paralelo estouravam a memória da function)
+  const buffers = new Map<string, Buffer>();
+  for (const pub of (due || []) as PubRow[]) {
+    const url = pub.videos.public_url;
+    if (buffers.has(url)) continue;
+    if (pub.network === "youtube" || pub.network === "tiktok") {
+      try {
+        const res = await fetch(url);
+        if (res.ok) buffers.set(url, Buffer.from(await res.arrayBuffer()));
+      } catch { /* adapters baixam por conta própria como fallback */ }
+    }
+  }
+
+  const settled = await Promise.allSettled(
+    ((due || []) as PubRow[]).map((pub) => processOne(pub, buffers.get(pub.videos.public_url)))
+  );
   return settled.map((s) =>
     s.status === "fulfilled" ? s.value : { ok: false, error: String(s.reason) }
   );

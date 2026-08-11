@@ -31,9 +31,12 @@ export async function publishYouTube(input: PublishInput): Promise<PublishResult
   try {
     const accessToken = await getAccessToken();
 
-    const videoRes = await fetch(input.videoUrl);
-    if (!videoRes.ok) return { ok: false, error: "Falha ao baixar vídeo do storage" };
-    const videoBuffer = Buffer.from(await videoRes.arrayBuffer());
+    let videoBuffer = input.videoBytes;
+    if (!videoBuffer) {
+      const videoRes = await fetch(input.videoUrl);
+      if (!videoRes.ok) return { ok: false, error: "Falha ao baixar vídeo do storage" };
+      videoBuffer = Buffer.from(await videoRes.arrayBuffer());
+    }
 
     const description = [input.caption, input.hashtags].filter(Boolean).join("\n\n");
     const metadata = {
@@ -45,27 +48,33 @@ export async function publishYouTube(input: PublishInput): Promise<PublishResult
       status: { privacyStatus: "public", selfDeclaredMadeForKids: false },
     };
 
-    // Upload multipart (metadata JSON + vídeo binário)
-    const boundary = "ci_upload_boundary";
-    const head = Buffer.from(
-      `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n` +
-      `${JSON.stringify(metadata)}\r\n` +
-      `--${boundary}\r\nContent-Type: video/mp4\r\n\r\n`
-    );
-    const tail = Buffer.from(`\r\n--${boundary}--`);
-    const body = Buffer.concat([head, videoBuffer, tail]);
-
-    const uploadRes = await fetch(
-      "https://www.googleapis.com/upload/youtube/v3/videos?uploadType=multipart&part=snippet,status",
+    // Upload resumable em 2 passos: envia o buffer puro, sem duplicar na memória
+    // (o multipart antigo concatenava uma cópia inteira do vídeo)
+    const initRes = await fetch(
+      "https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status",
       {
         method: "POST",
         headers: {
           Authorization: `Bearer ${accessToken}`,
-          "Content-Type": `multipart/related; boundary=${boundary}`,
+          "Content-Type": "application/json; charset=UTF-8",
+          "X-Upload-Content-Type": "video/mp4",
+          "X-Upload-Content-Length": String(videoBuffer.length),
         },
-        body,
+        body: JSON.stringify(metadata),
       }
     );
+    if (!initRes.ok) {
+      const err = await initRes.json().catch(() => null);
+      return { ok: false, error: `YouTube init: ${err?.error?.message || `HTTP ${initRes.status}`}` };
+    }
+    const uploadUrl = initRes.headers.get("location");
+    if (!uploadUrl) return { ok: false, error: "YouTube init: sem URL de upload" };
+
+    const uploadRes = await fetch(uploadUrl, {
+      method: "PUT",
+      headers: { "Content-Type": "video/mp4" },
+      body: videoBuffer,
+    });
     const uploaded = await uploadRes.json();
     if (uploaded.error) {
       return { ok: false, error: `YouTube upload: ${uploaded.error.message}` };

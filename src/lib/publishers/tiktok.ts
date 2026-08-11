@@ -59,9 +59,12 @@ export async function publishTikTok(input: PublishInput): Promise<PublishResult>
   try {
     const accessToken = await getTikTokAccessToken();
 
-    const videoRes = await fetch(input.videoUrl);
-    if (!videoRes.ok) return { ok: false, error: "Falha ao baixar vídeo do storage" };
-    const video = Buffer.from(await videoRes.arrayBuffer());
+    let video = input.videoBytes;
+    if (!video) {
+      const videoRes = await fetch(input.videoUrl);
+      if (!videoRes.ok) return { ok: false, error: "Falha ao baixar vídeo do storage" };
+      video = Buffer.from(await videoRes.arrayBuffer());
+    }
 
     // Regra de chunk do TikTok: peça única só até 64MB; acima disso, pedaços de
     // 5-64MB, com o resto embutido no último pedaço (último pode ter até 128MB)

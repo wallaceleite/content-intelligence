@@ -70,11 +70,25 @@ export async function publishYouTube(input: PublishInput): Promise<PublishResult
     const uploadUrl = initRes.headers.get("location");
     if (!uploadUrl) return { ok: false, error: "YouTube init: sem URL de upload" };
 
-    const uploadRes = await fetch(uploadUrl, {
-      method: "PUT",
-      headers: { "Content-Type": "video/mp4" },
-      body: videoBuffer as unknown as BodyInit,
-    });
+    // Envio em pedaços de 32MB (múltiplo de 256KB, exigência do Google):
+    // PUT único de 234MB estourava a memória da function. 308 = continua.
+    const CHUNK = 32 * 1024 * 1024;
+    let uploadRes: Response | null = null;
+    for (let start = 0; start < videoBuffer.length; start += CHUNK) {
+      const end = Math.min(start + CHUNK, videoBuffer.length);
+      uploadRes = await fetch(uploadUrl, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "video/mp4",
+          "Content-Range": `bytes ${start}-${end - 1}/${videoBuffer.length}`,
+        },
+        body: videoBuffer.subarray(start, end) as unknown as BodyInit,
+      });
+      if (uploadRes.status !== 308 && !uploadRes.ok) {
+        return { ok: false, error: `YouTube upload (byte ${start}): HTTP ${uploadRes.status}` };
+      }
+    }
+    if (!uploadRes) return { ok: false, error: "YouTube upload: vídeo vazio" };
     const uploaded = await uploadRes.json();
     if (uploaded.error) {
       return { ok: false, error: `YouTube upload: ${uploaded.error.message}` };

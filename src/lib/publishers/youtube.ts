@@ -73,7 +73,7 @@ export async function publishYouTube(input: PublishInput): Promise<PublishResult
     const uploadRes = await fetch(uploadUrl, {
       method: "PUT",
       headers: { "Content-Type": "video/mp4" },
-      body: videoBuffer,
+      body: videoBuffer as unknown as BodyInit,
     });
     const uploaded = await uploadRes.json();
     if (uploaded.error) {

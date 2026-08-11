@@ -105,7 +105,7 @@ export async function publishTikTok(input: PublishInput): Promise<PublishResult>
           "Content-Length": String(end - start),
           "Content-Range": `bytes ${start}-${end - 1}/${video.length}`,
         },
-        body: video.subarray(start, end),
+        body: video.subarray(start, end) as unknown as BodyInit,
       });
       if (!uploadRes.ok) {
         return { ok: false, error: `TikTok upload (pedaço ${i + 1}/${totalChunks}): HTTP ${uploadRes.status}` };

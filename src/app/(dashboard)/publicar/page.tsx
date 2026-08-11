@@ -292,6 +292,12 @@ export default function PublicarPage() {
 
   async function retryNow(id: string) {
     setNotice("Reprocessando…");
+    // Reagendar zera as tentativas esgotadas antes de reprocessar
+    await fetch(`/api/publications/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ scheduledAt: new Date().toISOString() }),
+    });
     await fetch("/api/publish/run", {
       method: "POST",
       headers: { "Content-Type": "application/json" },

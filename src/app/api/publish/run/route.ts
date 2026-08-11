@@ -8,6 +8,16 @@ const MAX_ATTEMPTS = 3;
 const PER_NETWORK_TIMEOUT_MS = 240_000;
 const STALE_PUBLISHING_MIN = 10;
 
+// Arquitetura dispatcher: a rota principal só ACHA o que está devido e dispara
+// uma invocação-filha por publicação (?single=<id>). Cada filha é uma function
+// separada com memória e tempo próprios — vídeo de 234MB numa rede não derruba
+// as outras (OOM) nem estoura o tempo da execução única.
+
+function authorized(req: NextRequest) {
+  const secret = process.env.CRON_SECRET;
+  return !secret || req.headers.get("authorization") === `Bearer ${secret}`;
+}
+
 function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
   return Promise.race([
     p,
@@ -27,22 +37,31 @@ type PubRow = {
   videos: { public_url: string; title: string };
 };
 
-// Cada rede roda isolada e em paralelo: uma travar/falhar não bloqueia as outras.
-async function processOne(pub: PubRow, videoBytes?: Buffer) {
+// Filha: processa exatamente UMA publicação nesta invocação
+async function processSingle(pubId: string) {
+  const { data: pub } = await supabaseAdmin
+    .from("publications")
+    .select("*, videos(public_url, title)")
+    .eq("id", pubId)
+    .in("status", ["agendado", "falhou", "rascunho", "publicando"])
+    .lt("attempts", MAX_ATTEMPTS)
+    .single();
+  if (!pub) return { id: pubId, ok: false, error: "Publicação não elegível" };
+
+  const row = pub as PubRow;
   await supabaseAdmin
     .from("publications")
-    .update({ status: "publicando", attempts: pub.attempts + 1, updated_at: new Date().toISOString() })
-    .eq("id", pub.id);
+    .update({ status: "publicando", attempts: row.attempts + 1, updated_at: new Date().toISOString() })
+    .eq("id", row.id);
 
   let result;
   try {
     result = await withTimeout(
-      publishTo(pub.network as Network, {
-        videoUrl: pub.videos.public_url,
-        videoBytes,
-        title: pub.title || pub.videos.title,
-        caption: pub.caption || "",
-        hashtags: pub.hashtags || "",
+      publishTo(row.network as Network, {
+        videoUrl: row.videos.public_url,
+        title: row.title || row.videos.title,
+        caption: row.caption || "",
+        hashtags: row.hashtags || "",
       }),
       PER_NETWORK_TIMEOUT_MS
     );
@@ -61,10 +80,9 @@ async function processOne(pub: PubRow, videoBytes?: Buffer) {
         error_message: null,
         updated_at: new Date().toISOString(),
       })
-      .eq("id", pub.id);
+      .eq("id", row.id);
   } else {
-    // Volta pra fila até esgotar tentativas; o tick de 5min re-processa
-    const exhausted = pub.attempts + 1 >= MAX_ATTEMPTS;
+    const exhausted = row.attempts + 1 >= MAX_ATTEMPTS;
     await supabaseAdmin
       .from("publications")
       .update({
@@ -72,65 +90,52 @@ async function processOne(pub: PubRow, videoBytes?: Buffer) {
         error_message: result.error || "Falha desconhecida",
         updated_at: new Date().toISOString(),
       })
-      .eq("id", pub.id);
+      .eq("id", row.id);
   }
 
-  return { id: pub.id, network: pub.network, ...result };
+  return { id: row.id, network: row.network, ...result };
 }
 
-// Coração da confiabilidade (O2 do BRD): fila com redes em paralelo, timeout por
-// rede, resgate de publicações órfãs (function morta no meio) e retry automático.
-async function processQueue(ids?: string[]) {
-  const now = new Date().toISOString();
-  const staleCutoff = new Date(Date.now() - STALE_PUBLISHING_MIN * 60 * 1000).toISOString();
-
-  let query = supabaseAdmin
-    .from("publications")
-    .select("*, videos(public_url, title)")
-    .lt("attempts", MAX_ATTEMPTS);
-
-  if (ids?.length) {
-    query = query.in("id", ids).in("status", ["agendado", "falhou", "rascunho", "publicando"]);
-  } else {
-    // Devidas + órfãs: 'publicando' parado há 10min = execução anterior morreu
-    query = query.or(
-      `and(status.eq.agendado,scheduled_at.lte.${now}),and(status.eq.publicando,updated_at.lt.${staleCutoff})`
-    );
+// Dispatcher: acha devidas (+ órfãs em 'publicando' há 10min) e chama uma filha por id
+async function dispatch(origin: string, ids?: string[]) {
+  let due = ids;
+  if (!due) {
+    const now = new Date().toISOString();
+    const staleCutoff = new Date(Date.now() - STALE_PUBLISHING_MIN * 60 * 1000).toISOString();
+    const { data, error } = await supabaseAdmin
+      .from("publications")
+      .select("id")
+      .lt("attempts", MAX_ATTEMPTS)
+      .or(
+        `and(status.eq.agendado,scheduled_at.lte.${now}),and(status.eq.publicando,updated_at.lt.${staleCutoff})`
+      )
+      .limit(10);
+    if (error) throw new Error(error.message);
+    due = (data || []).map((d) => d.id);
   }
+  if (!due.length) return [];
 
-  const { data: due, error } = await query.limit(10);
-  if (error) throw new Error(error.message);
-
-  // Baixa cada vídeo UMA vez e compartilha o buffer entre as redes
-  // (3 downloads de 234MB em paralelo estouravam a memória da function)
-  const buffers = new Map<string, Buffer>();
-  for (const pub of (due || []) as PubRow[]) {
-    const url = pub.videos.public_url;
-    if (buffers.has(url)) continue;
-    if (pub.network === "youtube" || pub.network === "tiktok") {
-      try {
-        const res = await fetch(url);
-        if (res.ok) buffers.set(url, Buffer.from(await res.arrayBuffer()));
-      } catch { /* adapters baixam por conta própria como fallback */ }
-    }
-  }
-
+  const secret = process.env.CRON_SECRET;
   const settled = await Promise.allSettled(
-    ((due || []) as PubRow[]).map((pub) => processOne(pub, buffers.get(pub.videos.public_url)))
+    due.map(async (id) => {
+      const res = await fetch(`${origin}/api/publish/run?single=${id}`, {
+        headers: secret ? { Authorization: `Bearer ${secret}` } : {},
+        signal: AbortSignal.timeout(PER_NETWORK_TIMEOUT_MS + 30_000),
+      });
+      return res.json();
+    })
   );
   return settled.map((s) =>
     s.status === "fulfilled" ? s.value : { ok: false, error: String(s.reason) }
   );
 }
 
-// GET - tick externo (GitHub Actions a cada 5min + cron diário da Vercel). Bearer CRON_SECRET.
 export async function GET(req: NextRequest) {
-  const secret = process.env.CRON_SECRET;
-  if (secret && req.headers.get("authorization") !== `Bearer ${secret}`) {
-    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
-  }
+  if (!authorized(req)) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   try {
-    const results = await processQueue();
+    const single = req.nextUrl.searchParams.get("single");
+    if (single) return NextResponse.json(await processSingle(single));
+    const results = await dispatch(req.nextUrl.origin);
     return NextResponse.json({ processed: results.length, results });
   } catch (e: unknown) {
     return NextResponse.json(
@@ -144,7 +149,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const results = await processQueue(body.publicationIds);
+    const results = await dispatch(req.nextUrl.origin, body.publicationIds);
     return NextResponse.json({ processed: results.length, results });
   } catch (e: unknown) {
     return NextResponse.json(

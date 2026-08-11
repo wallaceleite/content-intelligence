@@ -8,10 +8,10 @@ const MAX_ATTEMPTS = 3;
 const PER_NETWORK_TIMEOUT_MS = 240_000;
 const STALE_PUBLISHING_MIN = 10;
 
-// Arquitetura dispatcher: a rota principal só ACHA o que está devido e dispara
-// uma invocação-filha por publicação (?single=<id>). Cada filha é uma function
-// separada com memória e tempo próprios — vídeo de 234MB numa rede não derruba
-// as outras (OOM) nem estoura o tempo da execução única.
+// Arquitetura: cada publicação roda numa invocação PRÓPRIA (?single=<id>) com
+// memória e tempo isolados. O fan-out acontece FORA da function (browser na UI,
+// GitHub Actions no tick) — function chamando a si mesma dispara a proteção
+// anti-recursão da Vercel e morre. GET sem params só LISTA o que está devido.
 
 function authorized(req: NextRequest) {
   const secret = process.env.CRON_SECRET;
@@ -96,38 +96,20 @@ async function processSingle(pubId: string) {
   return { id: row.id, network: row.network, ...result };
 }
 
-// Dispatcher: acha devidas (+ órfãs em 'publicando' há 10min) e chama uma filha por id
-async function dispatch(origin: string, ids?: string[]) {
-  let due = ids;
-  if (!due) {
-    const now = new Date().toISOString();
-    const staleCutoff = new Date(Date.now() - STALE_PUBLISHING_MIN * 60 * 1000).toISOString();
-    const { data, error } = await supabaseAdmin
-      .from("publications")
-      .select("id")
-      .lt("attempts", MAX_ATTEMPTS)
-      .or(
-        `and(status.eq.agendado,scheduled_at.lte.${now}),and(status.eq.publicando,updated_at.lt.${staleCutoff})`
-      )
-      .limit(10);
-    if (error) throw new Error(error.message);
-    due = (data || []).map((d) => d.id);
-  }
-  if (!due.length) return [];
-
-  const secret = process.env.CRON_SECRET;
-  const settled = await Promise.allSettled(
-    due.map(async (id) => {
-      const res = await fetch(`${origin}/api/publish/run?single=${id}`, {
-        headers: secret ? { Authorization: `Bearer ${secret}` } : {},
-        signal: AbortSignal.timeout(PER_NETWORK_TIMEOUT_MS + 30_000),
-      });
-      return res.json();
-    })
-  );
-  return settled.map((s) =>
-    s.status === "fulfilled" ? s.value : { ok: false, error: String(s.reason) }
-  );
+// Lista o que está devido (+ órfãs em 'publicando' há 10min) — quem processa é a filha
+async function listDue(): Promise<string[]> {
+  const now = new Date().toISOString();
+  const staleCutoff = new Date(Date.now() - STALE_PUBLISHING_MIN * 60 * 1000).toISOString();
+  const { data, error } = await supabaseAdmin
+    .from("publications")
+    .select("id")
+    .lt("attempts", MAX_ATTEMPTS)
+    .or(
+      `and(status.eq.agendado,scheduled_at.lte.${now}),and(status.eq.publicando,updated_at.lt.${staleCutoff})`
+    )
+    .limit(10);
+  if (error) throw new Error(error.message);
+  return (data || []).map((d) => d.id);
 }
 
 export async function GET(req: NextRequest) {
@@ -135,8 +117,7 @@ export async function GET(req: NextRequest) {
   try {
     const single = req.nextUrl.searchParams.get("single");
     if (single) return NextResponse.json(await processSingle(single));
-    const results = await dispatch(req.nextUrl.origin);
-    return NextResponse.json({ processed: results.length, results });
+    return NextResponse.json({ due: await listDue() });
   } catch (e: unknown) {
     return NextResponse.json(
       { error: e instanceof Error ? e.message : "Erro na fila" },
@@ -145,12 +126,18 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// POST - "Publicar agora" / "Tentar de novo" da UI: { publicationIds: [...] }
+// POST - UI: { publicationIds: [<UM id>] } — a página faz o fan-out (1 chamada por rede)
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const results = await dispatch(req.nextUrl.origin, body.publicationIds);
-    return NextResponse.json({ processed: results.length, results });
+    const ids: string[] = body.publicationIds || [];
+    if (ids.length !== 1) {
+      return NextResponse.json(
+        { error: "Envie exatamente 1 publicationId por chamada (fan-out no cliente)" },
+        { status: 400 }
+      );
+    }
+    return NextResponse.json(await processSingle(ids[0]));
   } catch (e: unknown) {
     return NextResponse.json(
       { error: e instanceof Error ? e.message : "Erro na fila" },

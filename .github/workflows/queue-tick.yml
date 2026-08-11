@@ -7,8 +7,13 @@ jobs:
   tick:
     runs-on: ubuntu-latest
     steps:
-      - name: Processa fila de publicacoes
+      - name: Fan-out da fila (1 chamada por publicacao)
         run: |
-          curl -fsS -m 280 \
-            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
-            "https://content-intelligence-infolauncher.vercel.app/api/publish/run"
+          BASE="https://content-intelligence-infolauncher.vercel.app/api/publish/run"
+          AUTH="Authorization: Bearer ${{ secrets.CRON_SECRET }}"
+          DUE=$(curl -fsS -m 30 -H "$AUTH" "$BASE" | python3 -c "import json,sys; print(' '.join(json.load(sys.stdin).get('due',[])))")
+          echo "devidas: $DUE"
+          for id in $DUE; do
+            curl -fsS -m 280 -H "$AUTH" "$BASE?single=$id" && echo " <- $id ok" || echo " <- $id FALHOU" &
+          done
+          wait

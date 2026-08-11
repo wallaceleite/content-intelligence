@@ -263,12 +263,17 @@ export default function PublicarPage() {
 
       if (!schedule) {
         setNotice("Publicando nas redes selecionadas…");
+        // 1 chamada POR rede: cada uma vira uma invocação isolada no servidor
         const ids = json.publications.map((p: { id: string }) => p.id);
-        await fetch("/api/publish/run", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ publicationIds: ids }),
-        });
+        await Promise.allSettled(
+          ids.map((id: string) =>
+            fetch("/api/publish/run", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ publicationIds: [id] }),
+            })
+          )
+        );
       } else {
         setNotice("Agendado. O cron executa no horário definido.");
       }

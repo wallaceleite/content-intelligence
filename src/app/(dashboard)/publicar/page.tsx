@@ -51,6 +51,7 @@ export default function PublicarPage() {
   const [schedule, setSchedule] = useState(false);
   const [scheduledAt, setScheduledAt] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [normalizing, setNormalizing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [stage, setStage] = useState<"transcrevendo" | "gerando" | "concluida" | "erro" | null>(null);
@@ -171,6 +172,21 @@ export default function PublicarPage() {
     loadQueue();
   }, []);
 
+  // Lê as dimensões do arquivo local via metadata — instantâneo, sem upload
+  function readVideoDimensions(file: File): Promise<{ width: number; height: number }> {
+    return new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(file);
+      const el = document.createElement("video");
+      el.preload = "metadata";
+      el.onloadedmetadata = () => {
+        resolve({ width: el.videoWidth, height: el.videoHeight });
+        URL.revokeObjectURL(url);
+      };
+      el.onerror = () => { URL.revokeObjectURL(url); reject(new Error("metadata")); };
+      el.src = url;
+    });
+  }
+
   async function handleUpload(file: File) {
     setUploading(true);
     setError(null);
@@ -212,6 +228,20 @@ export default function PublicarPage() {
 
       // Transcrição em background — RF-11: sem ação do usuário
       fetch(`/api/videos/${created.video.id}/transcribe`, { method: "POST" }).catch(() => {});
+
+      // Instagram rejeita largura >1920 (erro 2207053): normaliza em background
+      // e trava o botão de publicar até terminar
+      const dims = await readVideoDimensions(file).catch(() => null);
+      if (dims && dims.width > 1920) {
+        setNormalizing(true);
+        fetch(`/api/videos/${created.video.id}/normalize`, { method: "POST" })
+          .then(async (r) => {
+            const j = await r.json().catch(() => ({}));
+            if (!r.ok) setError(`Otimização pro Instagram falhou: ${j.error || r.status} — o IG pode rejeitar este vídeo`);
+          })
+          .catch(() => setError("Otimização pro Instagram falhou — o IG pode rejeitar este vídeo"))
+          .finally(() => setNormalizing(false));
+      }
       setStage("transcrevendo");
       setStageError(null);
       setPipePct(25);
@@ -477,11 +507,11 @@ export default function PublicarPage() {
                 className="rounded-xl border bg-transparent px-3 py-2 text-sm outline-none"
                 style={{ borderColor: "var(--border-glass)", colorScheme: "dark" }} />
             )}
-            <button onClick={submit} disabled={submitting}
+            <button onClick={submit} disabled={submitting || normalizing}
               className="ml-auto flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all disabled:opacity-50"
               style={{ background: "var(--accent)", color: "#0A0A0F" }}>
-              {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-              {schedule ? "Agendar" : "Publicar"}
+              {submitting || normalizing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+              {normalizing ? "Otimizando vídeo pro Instagram…" : schedule ? "Agendar" : "Publicar"}
             </button>
           </div>
         </div>

@@ -73,7 +73,7 @@ export async function POST(req: NextRequest) {
 
     // 3. Get media from Instagram (only first page — recent posts)
     let allMedia: any[] = [];
-    let url = `${IG_API}/${IG_USER_ID}/media?fields=id,media_type,timestamp,like_count,comments_count,shortcode&limit=50`;
+    let url = `${IG_API}/${IG_USER_ID}/media?fields=id,media_type,media_product_type,timestamp,like_count,comments_count,shortcode,caption,permalink,media_url,thumbnail_url&limit=50`;
 
     while (url && allMedia.length < 200) {
       const data = await igFetch(url);
@@ -81,20 +81,24 @@ export async function POST(req: NextRequest) {
       url = data.paging?.next || "";
     }
 
-    // Filter to only media we have in DB
-    const mediaToUpdate = allMedia.filter((m) => postMap.has(m.shortcode || m.id));
-
-    // 4. Fetch insights in parallel batches of 5
+    // 4. Fetch insights in parallel batches of 5 — insere posts novos e atualiza os existentes
     let updated = 0;
+    let inserted = 0;
     let errors = 0;
 
-    await parallelBatch(mediaToUpdate, 5, async (media) => {
+    await parallelBatch(allMedia, 5, async (media) => {
       try {
-        let reach = 0, saves = 0, shares = 0;
+        let reach = 0, saves = 0, shares = 0, views = 0, watchMs = 0;
 
-        const insightsData = await igFetch(
-          `${IG_API}/${media.id}/insights?metric=reach,saved,shares`
-        );
+        const isReel = media.media_product_type === "REELS";
+        const metrics = isReel
+          ? "reach,saved,shares,views,ig_reels_avg_watch_time"
+          : "reach,saved,shares,views";
+        let insightsData = await igFetch(`${IG_API}/${media.id}/insights?metric=${metrics}`);
+        // Mídia antiga pode não suportar views/watch time — refaz só com o básico
+        if (insightsData.error) {
+          insightsData = await igFetch(`${IG_API}/${media.id}/insights?metric=reach,saved,shares`);
+        }
 
         if (insightsData.data) {
           for (const metric of insightsData.data) {
@@ -102,23 +106,41 @@ export async function POST(req: NextRequest) {
             if (metric.name === "reach") reach = val;
             if (metric.name === "saved") saves = val;
             if (metric.name === "shares") shares = val;
+            if (metric.name === "views") views = val;
+            if (metric.name === "ig_reels_avg_watch_time") watchMs = val;
           }
         }
 
+        // CDN do IG assina as URLs com validade curta — renova a capa a cada sync
+        const thumb = media.thumbnail_url || media.media_url || null;
+        const common = {
+          saves_count: saves,
+          shares_count: shares,
+          reach_count: reach,
+          ig_media_id: media.id,
+          likes_count: media.like_count || 0,
+          comments_count: media.comments_count || 0,
+          ...(views > 0 ? { views_count: views } : {}),
+          ...(watchMs > 0 ? { avg_watch_time_ms: watchMs } : {}),
+          ...(thumb ? { thumbnail_url: thumb } : {}),
+        };
+
         const postId = postMap.get(media.shortcode || media.id);
         if (postId) {
-          await supabaseAdmin
-            .from("posts")
-            .update({
-              saves_count: saves,
-              shares_count: shares,
-              reach_count: reach,
-              ig_media_id: media.id,
-              likes_count: media.like_count || 0,
-              comments_count: media.comments_count || 0,
-            })
-            .eq("id", postId);
+          await supabaseAdmin.from("posts").update(common).eq("id", postId);
           updated++;
+        } else {
+          await supabaseAdmin.from("posts").insert({
+            ...common,
+            profile_id: profile.id,
+            post_id: media.id,
+            shortcode: media.shortcode || media.id,
+            post_type: isReel || media.media_type === "VIDEO" ? "video" : media.media_type === "CAROUSEL_ALBUM" ? "carousel" : "image",
+            url: media.permalink || null,
+            caption: media.caption || null,
+            posted_at: media.timestamp || null,
+          });
+          inserted++;
         }
       } catch {
         errors++;
@@ -193,8 +215,9 @@ export async function POST(req: NextRequest) {
       },
       media: {
         total: allMedia.length,
-        matched: mediaToUpdate.length,
+        matched: allMedia.length,
         updated,
+        inserted,
         errors,
       },
       demographics: demoSynced,

@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import {
   Send, Upload, Loader2, CheckCircle2, XCircle, Clock, CalendarClock,
-  RefreshCw, Trash2, Copy, ExternalLink, Play, Camera, Music2,
+  RefreshCw, Trash2, Copy, ExternalLink, Play, Camera, Music2, ChevronDown,
 } from "lucide-react";
 
 type Network = "youtube" | "instagram" | "tiktok";
@@ -18,7 +18,9 @@ interface Publication {
   published_at: string | null;
   external_url: string | null;
   error_message: string | null;
+  title: string | null;
   caption: string | null;
+  hashtags: string | null;
   videos: { id: string; title: string; theme: string | null; transcript_status: string } | null;
 }
 
@@ -52,6 +54,8 @@ export default function PublicarPage() {
   const [scheduledAt, setScheduledAt] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [normalizing, setNormalizing] = useState(false);
+  const [openCaption, setOpenCaption] = useState<string | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [stage, setStage] = useState<"transcrevendo" | "gerando" | "concluida" | "erro" | null>(null);
@@ -534,48 +538,84 @@ export default function PublicarPage() {
         {queue.map((p) => {
           const net = NETWORKS.find((n) => n.key === p.network)!;
           const chip = STATUS_CHIP[p.status] || STATUS_CHIP.rascunho;
+          const hasCopy = Boolean(p.title || p.caption || p.hashtags);
+          const isOpen = openCaption === p.id;
+          const fullText = [p.title, p.caption, p.hashtags].filter(Boolean).join("\n\n");
           return (
-            <div key={p.id} className="rounded-xl border p-3 flex items-center gap-3 flex-wrap"
+            <div key={p.id} className="rounded-xl border p-3"
               style={{ borderColor: "var(--border-glass)", background: "var(--background-elevated)" }}>
-              <net.Icon className="w-4 h-4 flex-shrink-0" style={{ color: net.color }} />
-              <div className="flex-1 min-w-[180px]">
-                <div className="text-sm font-medium">{p.videos?.title || "—"}</div>
-                <div className="text-xs" style={{ color: "var(--text-tertiary)" }}>
-                  {p.videos?.theme ? `${p.videos.theme} · ` : ""}
-                  {p.status === "agendado" && p.scheduled_at
-                    ? `agendado p/ ${new Date(p.scheduled_at).toLocaleString("pt-BR")}`
-                    : p.published_at
-                    ? new Date(p.published_at).toLocaleString("pt-BR")
-                    : ""}
+              <div className="flex items-center gap-3 flex-wrap">
+                <net.Icon className="w-4 h-4 flex-shrink-0" style={{ color: net.color }} />
+                <div className="flex-1 min-w-[180px]">
+                  <div className="text-sm font-medium">{p.videos?.title || "—"}</div>
+                  <div className="text-xs" style={{ color: "var(--text-tertiary)" }}>
+                    {p.videos?.theme ? `${p.videos.theme} · ` : ""}
+                    {p.status === "agendado" && p.scheduled_at
+                      ? `agendado p/ ${new Date(p.scheduled_at).toLocaleString("pt-BR")}`
+                      : p.published_at
+                      ? new Date(p.published_at).toLocaleString("pt-BR")
+                      : ""}
+                  </div>
+                  {p.error_message && (
+                    <div className="text-xs mt-1" style={{ color: "#EF4444" }}>{p.error_message}</div>
+                  )}
                 </div>
-                {p.error_message && (
-                  <div className="text-xs mt-1" style={{ color: "#EF4444" }}>{p.error_message}</div>
+                <span className="text-xs px-2 py-1 rounded-full flex items-center gap-1"
+                  style={{ background: `${chip.color}1A`, color: chip.color }}>
+                  {p.status === "agendado" && <Clock className="w-3 h-3" />}
+                  {chip.label}
+                </span>
+                {hasCopy && (
+                  <button onClick={() => setOpenCaption(isOpen ? null : p.id)}
+                    className="text-xs flex items-center gap-1"
+                    style={{ color: isOpen ? "var(--accent)" : "var(--text-tertiary)" }}>
+                    legenda
+                    <ChevronDown className="w-3 h-3 transition-transform" style={{ transform: isOpen ? "rotate(180deg)" : "none" }} />
+                  </button>
+                )}
+                {p.external_url && (
+                  <a href={p.external_url} target="_blank" rel="noreferrer">
+                    <ExternalLink className="w-4 h-4" style={{ color: "var(--accent)" }} />
+                  </a>
+                )}
+                {(p.status === "falhou" || p.status === "cancelado") && (
+                  <button onClick={() => retryNow(p.id)} title="Tentar de novo">
+                    <RefreshCw className="w-4 h-4" style={{ color: "var(--text-tertiary)" }} />
+                  </button>
+                )}
+                {p.status === "agendado" && (
+                  <button onClick={() => cancel(p.id)} className="text-xs underline" style={{ color: "var(--text-tertiary)" }}>
+                    cancelar
+                  </button>
+                )}
+                {["falhou", "cancelado", "rascunho"].includes(p.status) && (
+                  <button onClick={() => remove(p.id)} title="Excluir">
+                    <Trash2 className="w-4 h-4" style={{ color: "var(--text-tertiary)" }} />
+                  </button>
                 )}
               </div>
-              <span className="text-xs px-2 py-1 rounded-full flex items-center gap-1"
-                style={{ background: `${chip.color}1A`, color: chip.color }}>
-                {p.status === "agendado" && <Clock className="w-3 h-3" />}
-                {chip.label}
-              </span>
-              {p.external_url && (
-                <a href={p.external_url} target="_blank" rel="noreferrer">
-                  <ExternalLink className="w-4 h-4" style={{ color: "var(--accent)" }} />
-                </a>
-              )}
-              {(p.status === "falhou" || p.status === "cancelado") && (
-                <button onClick={() => retryNow(p.id)} title="Tentar de novo">
-                  <RefreshCw className="w-4 h-4" style={{ color: "var(--text-tertiary)" }} />
-                </button>
-              )}
-              {p.status === "agendado" && (
-                <button onClick={() => cancel(p.id)} className="text-xs underline" style={{ color: "var(--text-tertiary)" }}>
-                  cancelar
-                </button>
-              )}
-              {["falhou", "cancelado", "rascunho"].includes(p.status) && (
-                <button onClick={() => remove(p.id)} title="Excluir">
-                  <Trash2 className="w-4 h-4" style={{ color: "var(--text-tertiary)" }} />
-                </button>
+              {isOpen && (
+                <div className="mt-3 pt-3 border-t text-sm space-y-2"
+                  style={{ borderColor: "var(--border-glass)" }}>
+                  {p.title && <div className="font-medium">{p.title}</div>}
+                  {p.caption && (
+                    <div className="whitespace-pre-wrap" style={{ color: "var(--text-secondary)" }}>{p.caption}</div>
+                  )}
+                  {p.hashtags && (
+                    <div className="text-xs" style={{ color: "var(--accent)" }}>{p.hashtags}</div>
+                  )}
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(fullText);
+                      setCopiedId(p.id);
+                      setTimeout(() => setCopiedId(null), 2000);
+                    }}
+                    className="text-xs flex items-center gap-1"
+                    style={{ color: copiedId === p.id ? "#22C55E" : "var(--text-tertiary)" }}>
+                    {copiedId === p.id ? <CheckCircle2 className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                    {copiedId === p.id ? "copiado" : "copiar tudo"}
+                  </button>
+                </div>
               )}
             </div>
           );

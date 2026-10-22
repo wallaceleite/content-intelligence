@@ -236,19 +236,22 @@ export default function PublicarPage() {
       // Transcrição em background — RF-11: sem ação do usuário
       fetch(`/api/videos/${created.video.id}/transcribe`, { method: "POST" }).catch(() => {});
 
-      // Instagram rejeita largura >1920 (erro 2207053): normaliza em background
-      // e trava o botão de publicar até terminar
+      // Normaliza pro Instagram em background e trava o botão de publicar até terminar:
+      // largura >1920 reescala (erro 2207053); nos demais só limpa os metadados
+      // sem recodificar (metadado duplicado do export dá erro 2207082)
       const dims = await readVideoDimensions(file).catch(() => null);
-      if (dims && dims.width > 1920) {
-        setNormalizing(true);
-        fetch(`/api/videos/${created.video.id}/normalize`, { method: "POST" })
-          .then(async (r) => {
-            const j = await r.json().catch(() => ({}));
-            if (!r.ok) setError(`Otimização pro Instagram falhou: ${j.error || r.status} — o IG pode rejeitar este vídeo`);
-          })
-          .catch(() => setError("Otimização pro Instagram falhou — o IG pode rejeitar este vídeo"))
-          .finally(() => setNormalizing(false));
-      }
+      setNormalizing(true);
+      fetch(`/api/videos/${created.video.id}/normalize`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ resize: !!dims && dims.width > 1920 }),
+      })
+        .then(async (r) => {
+          const j = await r.json().catch(() => ({}));
+          if (!r.ok) setError(`Otimização pro Instagram falhou: ${j.error || r.status} — o IG pode rejeitar este vídeo`);
+        })
+        .catch(() => setError("Otimização pro Instagram falhou — o IG pode rejeitar este vídeo"))
+        .finally(() => setNormalizing(false));
       setStage("transcrevendo");
       setStageError(null);
       setPipePct(25);

@@ -34,14 +34,15 @@ type PubRow = {
   title: string | null;
   caption: string | null;
   hashtags: string | null;
-  videos: { public_url: string; title: string };
+  videos: { public_url: string; title: string; cover_url?: string | null };
 };
 
 // Filha: processa exatamente UMA publicação nesta invocação
 async function processSingle(pubId: string) {
   const { data: pub } = await supabaseAdmin
     .from("publications")
-    .select("*, videos(public_url, title)")
+    // videos(*) e não a lista de colunas: segue funcionando se cover_url ainda não existir no banco
+    .select("*, videos(*)")
     .eq("id", pubId)
     .in("status", ["agendado", "falhou", "rascunho", "publicando"])
     .lt("attempts", MAX_ATTEMPTS)
@@ -62,6 +63,7 @@ async function processSingle(pubId: string) {
         title: row.title || row.videos.title,
         caption: row.caption || "",
         hashtags: row.hashtags || "",
+        coverUrl: row.videos.cover_url || undefined,
       }),
       PER_NETWORK_TIMEOUT_MS
     );

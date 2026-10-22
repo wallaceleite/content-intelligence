@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import {
   Send, Upload, Loader2, CheckCircle2, XCircle, Clock, CalendarClock,
-  RefreshCw, Trash2, Copy, ExternalLink, Play, Camera, Music2, ChevronDown,
+  RefreshCw, Trash2, Copy, ExternalLink, Play, Camera, Music2, ChevronDown, ImagePlus,
 } from "lucide-react";
 
 type Network = "youtube" | "instagram" | "tiktok";
@@ -61,7 +61,10 @@ export default function PublicarPage() {
   const [stage, setStage] = useState<"transcrevendo" | "gerando" | "concluida" | "erro" | null>(null);
   const [stageError, setStageError] = useState<string | null>(null);
   const [pipePct, setPipePct] = useState(0);
+  const [cover, setCover] = useState<{ url: string; ratio: number } | null>(null);
+  const [coverUploading, setCoverUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const coverRef = useRef<HTMLInputElement>(null);
 
   // Barra de progresso do pipeline: % avança dentro da faixa de cada estágio
   // (transcrição não expõe % real, então a faixa anda com o tempo e trava no teto)
@@ -257,6 +260,81 @@ export default function PublicarPage() {
     }
   }
 
+  // Capa do Reels: o IG busca a imagem pela URL (cover_url) e pede JPEG. Converte qualquer
+  // imagem para JPEG no browser (máx. 1080×1920, sem recortar) antes de subir.
+  function toJpeg(file: File): Promise<{ blob: Blob; ratio: number }> {
+    return new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        const scale = Math.min(1, 1080 / img.naturalWidth, 1920 / img.naturalHeight);
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.round(img.naturalWidth * scale);
+        canvas.height = Math.round(img.naturalHeight * scale);
+        const ctx = canvas.getContext("2d");
+        if (!ctx) { URL.revokeObjectURL(url); reject(new Error("canvas indisponível")); return; }
+        ctx.fillStyle = "#000";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        URL.revokeObjectURL(url);
+        canvas.toBlob(
+          (blob) => blob
+            ? resolve({ blob, ratio: img.naturalWidth / img.naturalHeight })
+            : reject(new Error("Não consegui converter a imagem")),
+          "image/jpeg",
+          0.92
+        );
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Formato de imagem não suportado (use JPG ou PNG)")); };
+      img.src = url;
+    });
+  }
+
+  async function handleCover(file: File) {
+    if (!video) return;
+    setCoverUploading(true);
+    setError(null);
+    try {
+      const { blob, ratio } = await toJpeg(file);
+      const signRes = await fetch("/api/videos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "cover-upload", videoId: video.id }),
+      });
+      const sign = await signRes.json();
+      if (sign.error) throw new Error(sign.error);
+
+      const put = await fetch(sign.signedUrl, { method: "PUT", headers: { "Content-Type": "image/jpeg" }, body: blob });
+      if (!put.ok) throw new Error(`Upload da capa falhou (HTTP ${put.status})`);
+
+      const setRes = await fetch("/api/videos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "set-cover", videoId: video.id, filePath: sign.path }),
+      });
+      const set = await setRes.json();
+      if (set.error) throw new Error(set.error);
+      setCover({ url: set.coverUrl, ratio });
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Falha ao anexar a capa");
+    } finally {
+      setCoverUploading(false);
+      if (coverRef.current) coverRef.current.value = "";
+    }
+  }
+
+  async function removeCover() {
+    if (!video) return;
+    const res = await fetch("/api/videos", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "set-cover", videoId: video.id, filePath: null }),
+    });
+    const json = await res.json();
+    if (json.error) { setError(json.error); return; }
+    setCover(null);
+  }
+
   function copyFrom(target: Network) {
     // Copia da primeira rede habilitada que já tem legenda
     const source = NETWORKS.map((n) => n.key).find(
@@ -313,6 +391,7 @@ export default function PublicarPage() {
       }
 
       setVideo(null);
+      setCover(null);
       setForms({ instagram: emptyForm(), youtube: emptyForm(), tiktok: emptyForm() });
       setSchedule(false);
       setScheduledAt("");
@@ -431,7 +510,7 @@ export default function PublicarPage() {
                   {stage === "erro" ? "tentar de novo" : "puxar legendas"}
                 </button>
               )}
-              <button onClick={() => setVideo(null)} className="text-xs underline" style={{ color: "var(--text-tertiary)" }}>
+              <button onClick={() => { setVideo(null); setCover(null); }} className="text-xs underline" style={{ color: "var(--text-tertiary)" }}>
                 trocar vídeo
               </button>
             </div>
@@ -452,6 +531,8 @@ export default function PublicarPage() {
       )}
       <input ref={fileRef} type="file" accept="video/*" className="hidden"
         onChange={(e) => e.target.files?.[0] && handleUpload(e.target.files[0])} />
+      <input ref={coverRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden"
+        onChange={(e) => e.target.files?.[0] && handleCover(e.target.files[0])} />
 
       {/* Legendas por rede */}
       {video && (
@@ -490,6 +571,44 @@ export default function PublicarPage() {
                     onChange={(e) => setForms((f) => ({ ...f, [n.key]: { ...f[n.key], hashtags: e.target.value } }))}
                     className="w-full rounded-xl border bg-transparent px-3 py-2 text-sm outline-none"
                     style={{ borderColor: "var(--border-glass)" }} />
+                  {n.key === "instagram" && (
+                    <div className="flex items-center gap-3 pt-1">
+                      {cover ? (
+                        <>
+                          <img src={cover.url} alt="Capa do Reels"
+                            className="w-12 rounded-lg border object-cover flex-shrink-0"
+                            style={{ aspectRatio: "9 / 16", borderColor: "var(--border-glass)" }} />
+                          <div className="min-w-0 space-y-1">
+                            <div className="text-xs font-medium">Capa do Reels anexada</div>
+                            {Math.abs(cover.ratio - 9 / 16) > 0.03 && (
+                              <div className="text-xs" style={{ color: "#EAB308" }}>
+                                Fora de 9:16: o Instagram vai recortar as bordas
+                              </div>
+                            )}
+                            <div className="flex gap-3">
+                              <button onClick={() => coverRef.current?.click()} disabled={coverUploading}
+                                className="text-xs underline" style={{ color: "var(--accent)" }}>
+                                {coverUploading ? "enviando…" : "trocar"}
+                              </button>
+                              <button onClick={removeCover} disabled={coverUploading}
+                                className="text-xs underline" style={{ color: "var(--text-tertiary)" }}>
+                                remover
+                              </button>
+                            </div>
+                          </div>
+                        </>
+                      ) : (
+                        <button onClick={() => coverRef.current?.click()} disabled={coverUploading}
+                          className="flex items-center gap-2 text-xs px-3 py-2 rounded-xl border border-dashed transition-all hover:bg-[rgba(255,255,255,0.05)]"
+                          style={{ borderColor: "var(--border-glass)", color: "var(--text-tertiary)" }}>
+                          {coverUploading
+                            ? <Loader2 className="w-3.5 h-3.5 animate-spin" style={{ color: "var(--accent)" }} />
+                            : <ImagePlus className="w-3.5 h-3.5" style={{ color: "var(--accent)" }} />}
+                          {coverUploading ? "Enviando capa…" : "Anexar capa do Reels (opcional, 9:16)"}
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
             </div>

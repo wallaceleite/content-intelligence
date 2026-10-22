@@ -6,6 +6,7 @@ export interface PublishInput {
   title: string;
   caption: string;
   hashtags: string;
+  coverUrl?: string; // capa do Reels (JPEG público); só o Instagram usa
 }
 
 export interface PublishResult {

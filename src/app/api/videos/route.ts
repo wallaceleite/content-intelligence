@@ -13,13 +13,39 @@ export async function GET() {
   return NextResponse.json({ videos: data });
 }
 
-// POST - Duas ações:
+// POST - Ações:
 // { action: "signed-upload", filename } → URL assinada p/ upload direto do browser
 //   (o corpo da request na Vercel é limitado a 4.5MB — vídeo nunca passa pela function)
 // { action: "create", title, filePath, durationSeconds } → registra o vídeo após upload
+// { action: "cover-upload", videoId } → URL assinada p/ a capa do Reels (JPEG em capas/)
+// { action: "set-cover", videoId, filePath | null } → grava (ou remove) a capa do vídeo
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
+
+    if (body.action === "cover-upload") {
+      if (!body.videoId) return NextResponse.json({ error: "videoId obrigatório" }, { status: 400 });
+      const safeId = String(body.videoId).replace(/[^\w-]/g, "");
+      const path = `capas/${safeId}_${Date.now()}.jpg`;
+      const { data, error } = await supabaseAdmin.storage
+        .from("videos")
+        .createSignedUploadUrl(path);
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ path, signedUrl: data.signedUrl });
+    }
+
+    if (body.action === "set-cover") {
+      if (!body.videoId) return NextResponse.json({ error: "videoId obrigatório" }, { status: 400 });
+      const coverUrl = body.filePath
+        ? supabaseAdmin.storage.from("videos").getPublicUrl(body.filePath).data.publicUrl
+        : null;
+      const { error } = await supabaseAdmin
+        .from("videos")
+        .update({ cover_url: coverUrl })
+        .eq("id", body.videoId);
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ coverUrl });
+    }
 
     if (body.action === "signed-upload") {
       const safeName = String(body.filename || "video.mp4").replace(/[^\w.\-]/g, "_");

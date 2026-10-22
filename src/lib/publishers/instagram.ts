@@ -19,6 +19,7 @@ export async function publishInstagram(input: PublishInput): Promise<PublishResu
       video_url: input.videoUrl,
       caption,
       share_to_feed: true,
+      ...(input.coverUrl ? { cover_url: input.coverUrl } : {}),
       access_token: IG_TOKEN,
     }),
   });
